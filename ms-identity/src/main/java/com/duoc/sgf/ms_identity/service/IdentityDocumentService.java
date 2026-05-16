@@ -1,4 +1,25 @@
 package com.duoc.sgf.ms_identity.service;
 
-public class IdentityDocumentService {
+import com.duoc.sgf.ms_identity.dto.IdentityDocumentRequestDto;
+import com.duoc.sgf.ms_identity.dto.IdentityDocumentResponseDto;
+
+import java.util.List;
+
+public interface IdentityDocumentService {
+
+    List<IdentityDocumentResponseDto> findAll();
+
+    IdentityDocumentResponseDto findById(Long id);
+
+    List<IdentityDocumentResponseDto> findByUserId(Long userId);
+
+    List<IdentityDocumentResponseDto> findByStatus(String status);
+
+    IdentityDocumentResponseDto create(IdentityDocumentRequestDto request);
+
+    IdentityDocumentResponseDto update(Long id, IdentityDocumentRequestDto request);
+
+    IdentityDocumentResponseDto validateDocument(Long id);
+
+    void delete(Long id);
 }
