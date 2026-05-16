@@ -1,4 +1,27 @@
 package com.duoc.sgf.ms_visa.service;
 
-public class VisaRequestService {
+import com.duoc.sgf.ms_visa.dto.VisaRequestDto;
+import com.duoc.sgf.ms_visa.dto.VisaResponseDto;
+
+import java.util.List;
+
+public interface VisaRequestService {
+
+    List<VisaResponseDto> findAll();
+
+    VisaResponseDto findById(Long id);
+
+    List<VisaResponseDto> findByUserId(Long userId);
+
+    List<VisaResponseDto> findByStatus(String status);
+
+    VisaResponseDto create(VisaRequestDto request);
+
+    VisaResponseDto update(Long id, VisaRequestDto request);
+
+    VisaResponseDto approve(Long id);
+
+    VisaResponseDto reject(Long id);
+
+    void delete(Long id);
 }
