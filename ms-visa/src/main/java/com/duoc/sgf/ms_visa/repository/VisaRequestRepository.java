@@ -1,4 +1,4 @@
 package com.duoc.sgf.ms_visa.repository;
 
-public class c {
+public class VisaRequestRepository {
 }

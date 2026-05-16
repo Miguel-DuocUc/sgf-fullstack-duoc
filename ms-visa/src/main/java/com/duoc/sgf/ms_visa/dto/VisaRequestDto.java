@@ -1,4 +1,4 @@
 package com.duoc.sgf.ms_visa.dto;
 
-public class c {
+public class VisaRequestDto {
 }
