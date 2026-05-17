@@ -6,9 +6,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableFeignClients(basePackages = "com.duoc.sgf.ms_bordercontrol.client")
-public class MsBordercontrolApplication {
+public class MsBorderControlApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MsBordercontrolApplication.class, args);
+		SpringApplication.run(MsBorderControlApplication.class, args);
 	}
 }
