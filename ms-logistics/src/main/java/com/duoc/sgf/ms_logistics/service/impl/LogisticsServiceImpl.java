@@ -8,6 +8,7 @@ import com.duoc.sgf.ms_logistics.service.LogisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,21 +28,53 @@ public class LogisticsServiceImpl implements LogisticsService {
 
     @Override
     public List<PuestoResponseDto> listarTodo() {
-        return List.of();
+        List<PuestoFronterizo> puestoFronterizos = repository.findAll();
+        ArrayList <PuestoResponseDto> listaDtos = new ArrayList<PuestoResponseDto>();
+            for (PuestoFronterizo puestos:puestoFronterizos){
+                PuestoResponseDto dto = mapper.toDto(puestos);
+                listaDtos.add(dto);
+            }
+        return  listaDtos;
     }
 
     @Override
     public PuestoResponseDto buscarporId(Long id) {
+        PuestoFronterizo puestoFronterizo  =  repository.findById(id).orElse(null);
+
+        if (puestoFronterizo != null){
+           return mapper.toDto(puestoFronterizo);
+        }
         return null;
     }
 
     @Override
     public PuestoResponseDto actualizarPuesto(Long id, PuestoRequestDto requestDto) {
-        return null;
+        PuestoFronterizo puestoFronterizo =  repository.findById(id).orElse(null);
+        if (puestoFronterizo != null){
+            puestoFronterizo.setName(requestDto.getName());
+            puestoFronterizo.setDireccion(requestDto.getDireccion());
+            puestoFronterizo.setCantPersonMax(requestDto.getCantPersonMax());
+            puestoFronterizo.setGuardPerson(requestDto.getGuardPerson());
+            puestoFronterizo.setEstadoOperativo(requestDto.getEstadoOperativo());
+            repository.save(puestoFronterizo);
+            return mapper.toDto(puestoFronterizo);
+        }else {
+            return null ;
+        }
     }
+
+
+//
 
     @Override
     public boolean eliminarPuesto(Long id) {
-        return false;
+        PuestoFronterizo puestoFronterizo =  repository.findById(id).orElse(null);
+        if (puestoFronterizo != null){
+            repository.delete(puestoFronterizo);
+            return true;
+        } else {
+            return false ;
+        }
+
     }
 }

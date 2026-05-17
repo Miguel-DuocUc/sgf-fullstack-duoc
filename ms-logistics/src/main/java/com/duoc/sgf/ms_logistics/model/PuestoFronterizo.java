@@ -35,7 +35,7 @@ public class PuestoFronterizo {
     @Positive
     @Column(name = "cant_person_max")
     private Integer cantPersonMax;
-
+    //
     @NotNull
     @Positive
     @Column(name = "guardias_person")

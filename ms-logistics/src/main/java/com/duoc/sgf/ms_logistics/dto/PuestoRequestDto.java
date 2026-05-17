@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class PuestoRequestDto {
     @NotBlank
     private String name;
-
+    
     @NotBlank
     private String direccion;
 
@@ -21,4 +21,8 @@ public class PuestoRequestDto {
 
     @NotNull
     private Integer guardPerson;
+
+    @NotBlank
+    private String estadoOperativo;
+
 }

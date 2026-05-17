@@ -2,8 +2,9 @@ package com.duoc.sgf.ms_logistics.model.mapper;
 import com.duoc.sgf.ms_logistics.dto.PuestoResponseDto;
 import com.duoc.sgf.ms_logistics.dto.PuestoRequestDto;
 import com.duoc.sgf.ms_logistics.model.PuestoFronterizo;
+import org.springframework.stereotype.Component;
 
-
+@Component
 public class PuestoMapper {
 
     public PuestoFronterizo toEntity(PuestoRequestDto requestDto){
@@ -19,7 +20,7 @@ public class PuestoMapper {
     public PuestoResponseDto toDto(PuestoFronterizo entidad){
 
         PuestoResponseDto dto = new PuestoResponseDto();
-
+//
         dto.setId(entidad.getId());
         dto.setName(entidad.getName());
         dto.setDireccion(entidad.getDireccion());
