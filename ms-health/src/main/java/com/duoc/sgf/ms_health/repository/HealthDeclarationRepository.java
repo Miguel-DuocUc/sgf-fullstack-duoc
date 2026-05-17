@@ -1,4 +1,4 @@
 package com.duoc.sgf.ms_health.repository;
 
-public class c {
+public class HealthDeclarationRepository {
 }
