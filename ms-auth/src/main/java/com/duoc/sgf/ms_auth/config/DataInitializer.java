@@ -22,7 +22,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("=== CONFIGURANDO OPERADORES DEL SISTEMA FRONTERIZO ===");
 
-        // 1. GESTIÓN DEL ADMINISTRADOR (Fuerza la clave 'admin123')
+
         usuarioRepository.findByUsername("admin").ifPresentOrElse(
                 adminExistente -> {
                     adminExistente.setPassword(passwordEncoder.encode("admin123")); // Actualiza a la nueva
@@ -43,7 +43,7 @@ public class DataInitializer implements CommandLineRunner {
                 }
         );
 
-        // 2. GESTIÓN DEL OPERADOR (Mantiene 'user123')
+        
         usuarioRepository.findByUsername("operador01").ifPresentOrElse(
                 operadorExistente -> {
                     operadorExistente.setPassword(passwordEncoder.encode("user123"));
