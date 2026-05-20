@@ -3,7 +3,7 @@ services:
     image: gvenzl/oracle-xe:21-slim
     container_name: oracle-sgf
     ports:
-      - "1521:1521"
+      - "1522:1521"
     environment:
       ORACLE_PASSWORD: 1234
       APP_USER: MS_USERS
