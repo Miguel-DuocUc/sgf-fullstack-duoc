@@ -2,12 +2,13 @@ package com.duoc.sgf.ms_visa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
+@EnableFeignClients(basePackages = "com.duoc.sgf.ms_visa.client")
 public class MsVisaApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MsVisaApplication.class, args);
 	}
-
 }
