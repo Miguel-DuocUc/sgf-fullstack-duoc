@@ -1,10 +1,12 @@
 package com.duoc.sgf.ms_auth.service;
 
 import com.duoc.sgf.ms_auth.model.Usuario;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -18,10 +20,12 @@ public class JwtService {
     @Value("${global.operator.os.jwt.secret}")
     private String secretKey;
 
-
     @Value("${global.operator.os.jwt.expiration}")
     private long jwtExpiration;
 
+    // =========================
+    // GENERAR TOKEN
+    // =========================
     public String generarToken(Usuario usuario) {
 
         Map<String, Object> claims = new HashMap<>();
@@ -37,8 +41,38 @@ public class JwtService {
                 .compact();
     }
 
+    public String extraerUsername(String token) {
+        return extraerClaims(token).getSubject();
+    }
+
+    public boolean validarToken(String token, UserDetails userDetails) {
+
+        final String username = extraerUsername(token);
+
+        return username.equals(userDetails.getUsername())
+                && !tokenExpirado(token);
+    }
+
+    private boolean tokenExpirado(String token) {
+
+        return extraerClaims(token)
+                .getExpiration()
+                .before(new Date());
+    }
+
+    private Claims extraerClaims(String token) {
+
+        return Jwts.parser()
+                .verifyWith(obtenerLlaveFirma())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
     private SecretKey obtenerLlaveFirma() {
+
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

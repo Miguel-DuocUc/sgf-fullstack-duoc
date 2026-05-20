@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "USUARIOS") // <- Cambiar a mayúsculas
+@Table(name = "USUARIOS")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,7 +27,7 @@ public class Usuario {
     private boolean activo;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "USUARIO_ROLES", joinColumns = @JoinColumn(name = "USUARIO_ID")) // <- En Mayúsculas
-    @Column(name = "ROL") // <- En Mayúsculas
+    @CollectionTable(name = "USUARIO_ROLES", joinColumns = @JoinColumn(name = "USUARIO_ID"))
+    @Column(name = "ROL")
     private Set<String> roles;
 }
