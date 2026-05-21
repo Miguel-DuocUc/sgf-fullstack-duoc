@@ -36,7 +36,15 @@ public class AlertController {
         AlertResponseDto response = convertToDto(nuevaAlerta);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+    @GetMapping
+    public ResponseEntity<List<AlertResponseDto>> listarAlertas() {
+        List<AlertResponseDto> response = alertService.obtenerAlertasActivas()
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
 
+        return ResponseEntity.ok(response);
+    }
     @GetMapping("/pasaporte/{pasaporte}")
     public ResponseEntity<List<AlertResponseDto>> verificarPasaporte(@PathVariable String pasaporte) {
         List<Alert> alertas = alertService.verificarPasaporte(pasaporte);
@@ -45,7 +53,6 @@ public class AlertController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
-
     private AlertResponseDto convertToDto(Alert alert) {
         AlertResponseDto dto = new AlertResponseDto();
         dto.setId(alert.getId());
