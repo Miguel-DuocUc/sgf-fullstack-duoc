@@ -5,12 +5,16 @@ spring:
   application:
     name: ms-gateway
 
+  security:
+    user:
+      name: admin
+      password: admin123
+
   cloud:
     gateway:
       server:
         webflux:
           routes:
-
             - id: ms-auth-route
               uri: http://localhost:8081
               predicates:
@@ -21,10 +25,46 @@ spring:
               predicates:
                 - Path=/api/v1/logistics/**
 
+            - id: ms-alerts-route
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/v1/alerts/**
+
+            - id: ms-audit-route
+              uri: http://localhost:8084
+              predicates:
+                - Path=/api/v1/audit/**
+
+            - id: ms-visa-route
+              uri: http://localhost:8086
+              predicates:
+                - Path=/api/v1/visa-requests/**
+
+            - id: ms-identity-route
+              uri: http://localhost:8087
+              predicates:
+                - Path=/api/v1/identity-documents/**
+
+            - id: ms-users-route
+              uri: http://localhost:8089
+              predicates:
+                - Path=/api/v1/users/**
+
+            - id: ms-health-route
+              uri: http://localhost:8091
+              predicates:
+                - Path=/api/v1/health-declarations/**
+
+            - id: ms-bordercontrol-route
+              uri: http://localhost:8092
+              predicates:
+                - Path=/api/v1/border-controls/**
+
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
-
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    prefer-ip-address: true
