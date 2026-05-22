@@ -1,5 +1,0 @@
-UPDATE USUARIOS
-SET password = '$2a$10$8vSg9S8D84M9JqY8A.B2HOv6Z4I6e7Nn4Fm1WwXyZaQ2u3v4w5x6y'
-WHERE username = 'admin';
-
-COMMIT;

@@ -23,9 +23,6 @@ public class JwtService {
     @Value("${global.operator.os.jwt.expiration}")
     private long jwtExpiration;
 
-    // =========================
-    // GENERAR TOKEN
-    // =========================
     public String generarToken(Usuario usuario) {
 
         Map<String, Object> claims = new HashMap<>();
@@ -71,7 +68,7 @@ public class JwtService {
 
     private SecretKey obtenerLlaveFirma() {
 
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = secretKey.getBytes();
 
         return Keys.hmacShaKeyFor(keyBytes);
     }

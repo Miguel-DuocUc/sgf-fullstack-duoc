@@ -19,50 +19,123 @@ public class DataInitializer implements CommandLineRunner {
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
-        log.info("=== CONFIGURANDO OPERADORES DEL SISTEMA FRONTERIZO ===");
+    public void run(String... args) {
 
+        log.info("=== INICIALIZANDO OPERADORES DEL ECOSISTEMA FRONTERIZO ===");
 
-        usuarioRepository.findByUsername("admin").ifPresentOrElse(
-                adminExistente -> {
-                    adminExistente.setPassword(passwordEncoder.encode("admin123")); // Actualiza a la nueva
-                    adminExistente.setRoles(Set.of("ROLE_ADMIN"));
-                    adminExistente.setActivo(true);
-                    usuarioRepository.saveAndFlush(adminExistente);
-                    log.info("¡Cuenta 'admin' actualizada con éxito a 'admin123'!");
-                },
-                () -> {
-                    Usuario nuevoAdmin = Usuario.builder()
-                            .username("admin")
-                            .password(passwordEncoder.encode("admin123"))
-                            .activo(true)
-                            .roles(Set.of("ROLE_ADMIN"))
-                            .build();
-                    usuarioRepository.saveAndFlush(nuevoAdmin);
-                    log.info("Cuenta 'admin' creada desde cero.");
-                }
+        crearUsuario(
+                "superadmin",
+                "super123",
+                Set.of("ROLE_SUPER_ADMIN")
         );
 
-        
-        usuarioRepository.findByUsername("operador01").ifPresentOrElse(
-                operadorExistente -> {
-                    operadorExistente.setPassword(passwordEncoder.encode("user123"));
-                    operadorExistente.setRoles(Set.of("ROLE_OPERATOR"));
-                    operadorExistente.setActivo(true);
-                    usuarioRepository.saveAndFlush(operadorExistente);
-                    log.info("Cuenta 'operador01' sincronizada.");
-                },
-                () -> {
-                    Usuario nuevoOperador = Usuario.builder()
-                            .username("operador01")
-                            .password(passwordEncoder.encode("user123"))
-                            .activo(true)
-                            .roles(Set.of("ROLE_OPERATOR"))
-                            .build();
-                    usuarioRepository.saveAndFlush(nuevoOperador);
-                    log.info("Cuenta 'operador01' creada desde cero.");
-                }
+        crearUsuario(
+                "security_admin",
+                "security123",
+                Set.of("ROLE_SECURITY_ADMIN")
         );
 
-        log.info("=== ¡SISTEMA INICIALIZADO CON ROLES SEPARADOS! ===");
-    }}
+        crearUsuario(
+                "audit_admin",
+                "audit123",
+                Set.of("ROLE_AUDITOR")
+        );
+
+        crearUsuario(
+                "alert_operator",
+                "alert123",
+                Set.of("ROLE_ALERT_ANALYST")
+        );
+
+        crearUsuario(
+                "border_agent_01",
+                "border123",
+                Set.of("ROLE_BORDER_AGENT")
+        );
+
+        crearUsuario(
+                "border_supervisor",
+                "borderadmin123",
+                Set.of("ROLE_BORDER_SUPERVISOR")
+        );
+
+        crearUsuario(
+                "visa_operator",
+                "visa123",
+                Set.of("ROLE_VISA_OFFICER")
+        );
+
+        crearUsuario(
+                "identity_operator",
+                "identity123",
+                Set.of("ROLE_IDENTITY_OFFICER")
+        );
+
+        crearUsuario(
+                "health_operator",
+                "health123",
+                Set.of("ROLE_HEALTH_OFFICER")
+        );
+
+        crearUsuario(
+                "logistics_operator",
+                "logistics123",
+                Set.of("ROLE_LOGISTICS_OPERATOR")
+        );
+
+        crearUsuario(
+                "infra_admin",
+                "infra123",
+                Set.of("ROLE_INFRA_ADMIN")
+        );
+
+        crearUsuario(
+                "migration_operator",
+                "migration123",
+                Set.of("ROLE_MIGRATION_OPERATOR")
+        );
+
+        crearUsuario(
+                "citizen_demo",
+                "citizen123",
+                Set.of("ROLE_CITIZEN")
+        );
+
+        log.info("=== SISTEMA FRONTERIZO OPERATIVO ===");
+    }
+
+    private void crearUsuario(String username, String password, Set<String> roles) {
+
+        usuarioRepository.findByUsername(username)
+                .ifPresentOrElse(
+
+                        usuarioExistente -> {
+
+                            usuarioExistente.setPassword(
+                                    passwordEncoder.encode(password)
+                            );
+
+                            usuarioExistente.setRoles(roles);
+                            usuarioExistente.setActivo(true);
+
+                            usuarioRepository.saveAndFlush(usuarioExistente);
+
+                            log.info("Usuario '{}' actualizado.", username);
+                        },
+
+                        () -> {
+
+                            Usuario nuevoUsuario = Usuario.builder()
+                                    .username(username)
+                                    .password(passwordEncoder.encode(password))
+                                    .activo(true)
+                                    .roles(roles)
+                                    .build();
+
+                            usuarioRepository.saveAndFlush(nuevoUsuario);
+
+                            log.info("Usuario '{}' creado.", username);
+                        }
+                );
+    }
+}
