@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "ms-identity-border-client", url = "${clients.ms-identity.url}")
 public interface IdentityClient {
 
-    @GetMapping("/api/v1/identity-documents/{id}")
+    @GetMapping("/api/v1/identity/{id}")
     IdentityDocumentBasicDto findById(@PathVariable("id") Long id);
 }

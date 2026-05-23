@@ -30,7 +30,8 @@ public class AlertServiceImpl implements AlertService {
             String mensajeKafka = "NUEVA_ALERTA_EMITIDA: Pasaporte " + alertaGuardada.getPasaporteCiudadano()
                     + " - Tipo: " + alertaGuardada.getTipoAlerta();
 
-            kafkaTemplate.send("sgf-trazabilidad", mensajeKafka + ";" + alertaGuardada.getEmitidoPor());
+
+            kafkaTemplate.send("border-control-events", mensajeKafka + ";" + alertaGuardada.getEmitidoPor());
             System.out.println(">> [Kafka] Evento emitido con éxito desde el Impl.");
         } catch (Exception e) {
             System.err.println(">> [Alerta] Kafka está apagado. El evento se enviará cuando el cluster esté activo. Error: " + e.getMessage());

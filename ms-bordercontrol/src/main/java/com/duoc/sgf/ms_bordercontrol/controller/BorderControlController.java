@@ -7,16 +7,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/border-controls")
+@RequestMapping("/api/v1/border-control")
 @RequiredArgsConstructor
 public class BorderControlController {
 
     private final BorderControlService borderControlService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @GetMapping
     public ResponseEntity<List<BorderControlResponseDto>> findAll() {
@@ -40,7 +42,9 @@ public class BorderControlController {
 
     @PostMapping
     public ResponseEntity<BorderControlResponseDto> create(@Valid @RequestBody BorderControlRequestDto request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(borderControlService.create(request));
+        BorderControlResponseDto response = borderControlService.create(request);
+        kafkaTemplate.send("border-events", response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")

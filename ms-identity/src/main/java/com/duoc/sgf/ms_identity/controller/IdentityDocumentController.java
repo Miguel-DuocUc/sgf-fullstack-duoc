@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/identity-documents")
+@RequestMapping("/api/v1/identity")
 @RequiredArgsConstructor
 public class IdentityDocumentController {
 

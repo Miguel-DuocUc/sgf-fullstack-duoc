@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "ms-visa-border-client", url = "${clients.ms-visa.url}")
 public interface VisaClient {
 
-    @GetMapping("/api/v1/visa-requests/{id}")
+    @GetMapping("/api/v1/visas/{id}")
     VisaRequestBasicDto findById(@PathVariable("id") Long id);
 }

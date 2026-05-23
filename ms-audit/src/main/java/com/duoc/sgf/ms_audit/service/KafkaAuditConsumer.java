@@ -15,7 +15,7 @@ public class KafkaAuditConsumer {
         this.auditoriaRepository = auditoriaRepository;
     }
 
-    @KafkaListener(topics = "sgf-trazabilidad", groupId = "grupo-auditoria")
+    @KafkaListener(topics = "border-control-events", groupId = "grupo-auditoria")
     public void escucharTrazabilidad(String mensajeCompleto) {
         System.out.println(">> [Kafka ms-audit] Mensaje crudo recibido: " + mensajeCompleto);
 

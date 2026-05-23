@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "ms-health-border-client", url = "${clients.ms-health.url}")
 public interface HealthClient {
 
-    @GetMapping("/api/v1/health-declarations/{id}")
+    @GetMapping("/api/v1/health/{id}")
     HealthDeclarationBasicDto findById(@PathVariable("id") Long id);
 }
