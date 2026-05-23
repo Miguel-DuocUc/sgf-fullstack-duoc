@@ -22,13 +22,16 @@ El objetivo principal es automatizar el flujo de revisión fronteriza, permitien
 | ms-gateway | Punto de entrada central del sistema | 8080 |
 | ms-auth | Autenticación y autorización de usuarios | 8081 |
 | ms-logistics | Gestión logística del proceso fronterizo | 8082 |
-| ms-alerts | Gestión de alertas del sistema | 8083 |
-| ms-audit | Registro de auditorías y trazabilidad | 8084 |
-| ms-users | Gestión de usuarios del sistema | 8089 |
-| ms-identity | Gestión y validación de documentos de identidad | 8087 |
-| ms-visa | Gestión de solicitudes de visa | 8086 |
-| ms-health | Gestión de declaraciones sanitarias | 8091 |
-| ms-bordercontrol | Validación final y control fronterizo | 8092 |
+| ms-users | Gestión de usuarios del sistema | 8083 |
+| ms-bordercontrol | Validación final y control fronterizo | 8084|
+| ms-visa | Gestión de solicitudes de visa | 8085 |
+| ms-identity | Gestión y validación de documentos de identidad | 8086 |
+| ms-health | Gestión de declaraciones sanitarias | 8087 |
+| ms-alerts | Gestión de alertas del sistema | 8088 |
+| ms-audit | Registro de auditorías y trazabilidad | 8089 |
+
+
+
 
 ## Flujo principal del sistema
 
