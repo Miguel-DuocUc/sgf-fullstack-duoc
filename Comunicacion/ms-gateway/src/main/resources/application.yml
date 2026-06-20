@@ -1,0 +1,68 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ms-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: ms-auth-route
+          uri: lb://ms-auth
+          predicates:
+            - Path=/api/v1/auth/**
+
+        - id: ms-logistics-route
+          uri: lb://ms-logistics
+          predicates:
+            - Path=/api/v1/logistics/**
+
+        - id: ms-users-route
+          uri: lb://ms-users
+          predicates:
+            - Path=/api/v1/users/**
+
+        - id: ms-bordercontrol-route
+          uri: lb://ms-bordercontrol
+          predicates:
+            - Path=/api/v1/border-control/**
+
+        - id: ms-visa-route
+          uri: lb://ms-visa
+          predicates:
+            - Path=/api/v1/visas/**
+
+        - id: ms-identity-route
+          uri: lb://ms-identity
+          predicates:
+            - Path=/api/v1/identity/**
+
+        - id: ms-health-route
+          uri: lb://ms-health
+          predicates:
+            - Path=/api/v1/health/**
+
+        - id: ms-alerts-route
+          uri: lb://ms-alerts
+          predicates:
+            - Path=/api/v1/alerts/**
+
+        - id: ms-audit-route
+          uri: lb://ms-audit
+          predicates:
+            - Path=/api/v1/audit/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
+global:
+  operator:
+    os:
+      jwt:
+        secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+        expiration: ${JWT_EXPIRATION:86400000}

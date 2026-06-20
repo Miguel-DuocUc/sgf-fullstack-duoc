@@ -1,22 +1,325 @@
-version: '3'
+version: '3.8'
+#REDES Y VOLÚMENES
+networks:
+  sgf-network:
+    driver: bridge
+
+volumes:
+  oracle_data:
+
 services:
-  zookeeper:
+  #CAPA DE INFRAESTRUCTURA (Kafka & DB)
+  zookeeper-1:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper-1
+    restart: on-failure
     ports:
-      - "2181:2181"
+      - "12181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
-  kafka:
+  kafka-1:
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka-1
+    restart: on-failure
     ports:
-      - "9092:9092"
+      - "19092:19092"
     depends_on:
-      - zookeeper
+      - zookeeper-1
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,EXTERNAL://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  oracle-server:
+    image: gvenzl/oracle-free:slim
+    container_name: sgf_oracle_server
+    restart: on-failure
+    environment:
+      - ORACLE_PASSWORD=Admin12345*
+    ports:
+      - "1555:1521"
+    networks:
+      - sgf-network
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./init-oracle.sql:/container-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          memory: 1600M
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/Admin12345*@localhost:1521/FREE", "as", "sysdba", "<<<", "exit"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  #CAPA DE ENRUTAMIENTO (Eureka & Gateway)
+  ms-eurekaserver:
+    build: ./Comunicacion/ms-eurekaserver
+    container_name: ms-eurekaserver
+    restart: on-failure
+    depends_on:
+      oracle-server:
+        condition: service_healthy
+    ports:
+      - "8761:8761"
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #CAPA DE NEGOCIO Y SEGURIDAD
+  ms-auth:
+    build: ./Seguridad/ms-auth
+    container_name: ms-auth
+    restart: on-failure
+    depends_on:
+      oracle-server:
+        condition: service_healthy
+      ms-eurekaserver:
+        condition: service_healthy
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_auth
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - JWT_EXPIRATION=86400000
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-users:
+    build: ./Negocio/ms-users
+    container_name: ms-users
+    restart: on-failure
+    depends_on:
+      ms-auth:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_users
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-identity:
+    build: ./Negocio/ms-identity
+    container_name: ms-identity
+    restart: on-failure
+    depends_on:
+      ms-users:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_identity
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-visa:
+    build: ./Negocio/ms-visa
+    container_name: ms-visa
+    restart: on-failure
+    depends_on:
+      ms-identity:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_visa
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-logistics:
+    build: ./Negocio/ms-logistics
+    container_name: ms-logistics
+    restart: on-failure
+    depends_on:
+      ms-visa:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_logistics
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-health:
+    build: ./Negocio/ms-health
+    container_name: ms-health
+    restart: on-failure
+    depends_on:
+      ms-logistics:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_health
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-bordercontrol:
+    build: ./Negocio/ms-bordercontrol
+    container_name: ms-bordercontrol
+    restart: on-failure
+    depends_on:
+      ms-health:
+        condition: service_started
+      kafka-1:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_border
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - KAFKA_SERVER=kafka-1:9092
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-audit:
+    build: ./Seguridad/ms-audit
+    container_name: ms-audit
+    restart: on-failure
+    depends_on:
+      ms-bordercontrol:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_audit
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - KAFKA_SERVER=kafka-1:9092
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  ms-alerts:
+    build: ./Seguridad/ms-alerts
+    container_name: ms-alerts
+    restart: on-failure
+    depends_on:
+      ms-audit:
+        condition: service_started
+    environment:
+      - DB_HOST=oracle-server
+      - DB_PORT=1521
+      - DB_USER=ms_alerts
+      - DB_PASS=Admin12345
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - KAFKA_SERVER=kafka-1:9092
+      - SPRING_FLYWAY_CLEAN_DISABLED=false
+      - SPRING_FLYWAY_CLEAN_ON_VALIDATION_ERROR=true
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  # EL VAGÓN FINAL: Arranca cuando todos los demás ya iniciaron
+  ms-gateway:
+    build: ./Comunicacion/ms-gateway
+    container_name: ms-gateway
+    restart: on-failure
+    ports:
+      - "9090:8080"
+    depends_on:
+      ms-alerts:
+        condition: service_started
+      ms-eurekaserver:
+        condition: service_healthy
+    environment:
+      - EUREKA_URL=http://ms-eurekaserver:8761/eureka/
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - JWT_EXPIRATION=86400000
+    networks:
+      - sgf-network
+    deploy:
+      resources:
+        limits:
+          memory: 350M
