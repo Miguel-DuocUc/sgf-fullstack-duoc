@@ -1,6 +1,6 @@
 package com.duoc.sgf.ms_visa.client;
 
-import com.duoc.sgf.ms_visa.model.dto.IdentityDocumentBasicDto;
+import com.duoc.sgf.ms_visa.dto.IdentityDocumentBasicDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
