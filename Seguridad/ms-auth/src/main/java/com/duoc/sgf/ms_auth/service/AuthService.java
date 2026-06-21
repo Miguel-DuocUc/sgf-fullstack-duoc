@@ -1,7 +1,7 @@
 package com.duoc.sgf.ms_auth.service;
 
-import com.duoc.sgf.ms_auth.dto.LoginRequestDto;
-import com.duoc.sgf.ms_auth.dto.TokenResponseDto;
+import com.duoc.sgf.ms_auth.model.dto.LoginRequestDto;
+import com.duoc.sgf.ms_auth.model.dto.TokenResponseDto;
 import com.duoc.sgf.ms_auth.model.Usuario;
 import com.duoc.sgf.ms_auth.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;

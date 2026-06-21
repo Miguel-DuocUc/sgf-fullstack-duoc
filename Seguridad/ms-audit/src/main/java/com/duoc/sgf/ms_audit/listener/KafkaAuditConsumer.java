@@ -1,7 +1,7 @@
 package com.duoc.sgf.ms_audit.listener;
 
 import com.duoc.sgf.ms_audit.model.dto.AuditoriaRequestDto;
-import com.duoc.sgf.ms_audit.model.mapper.AuditoriaMapper;
+import com.duoc.sgf.ms_audit.model.mapper.AuditMapper;
 import com.duoc.sgf.ms_audit.service.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class KafkaAuditConsumer {
     private final AuditService auditService;
-    private final AuditoriaMapper auditoriaMapper;
+    private final AuditMapper auditMapper;
 
     @KafkaListener(topics = "border-control-events", groupId = "grupo-auditoria")
     public void escucharTrazabilidad(String mensajeCompleto) {
@@ -31,7 +31,7 @@ public class KafkaAuditConsumer {
                     .mensaje(mensajeInformativo)
                     .emitidoPor(emitidoPor)
                     .build();
-            var entidad = auditoriaMapper.toEntity(requestDto);
+            var entidad = auditMapper.toEntity(requestDto);
 
             auditService.registrarAuditoria(entidad);
             System.out.println(">> [Audit] Entrada de auditoría guardada con éxito usando Arquitectura CRS.");
