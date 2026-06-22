@@ -26,11 +26,16 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
 
     @Override
     public List<IdentityDocumentResponseDto> findAll() {
-        log.info("Listando documentos de identidad");
-        return identityDocumentRepository.findAll()
+        log.info("Listando todos los documentos de identidad registrados");
+
+        List<IdentityDocumentResponseDto> documents = identityDocumentRepository.findAll()
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Total de documentos de identidad encontrados: {}", documents.size());
+
+        return documents;
     }
 
     @Override
@@ -43,37 +48,49 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento de identidad no encontrado");
                 });
 
+        log.info("Documento de identidad encontrado correctamente con id: {}", id);
+
         return toResponseDto(document);
     }
 
     @Override
     public List<IdentityDocumentResponseDto> findByUserId(Long userId) {
-        log.info("Buscando documentos de identidad por usuario: {}", userId);
+        log.info("Buscando documentos de identidad asociados al usuario id: {}", userId);
 
-        return identityDocumentRepository.findByUserId(userId)
+        List<IdentityDocumentResponseDto> documents = identityDocumentRepository.findByUserId(userId)
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Consulta completada para usuario id: {}. Documentos encontrados: {}", userId, documents.size());
+
+        return documents;
     }
 
     @Override
     public List<IdentityDocumentResponseDto> findByStatus(String status) {
         log.info("Buscando documentos de identidad por estado: {}", status);
 
-        return identityDocumentRepository.findByStatus(status.toUpperCase())
+        List<IdentityDocumentResponseDto> documents = identityDocumentRepository.findByStatus(status.toUpperCase())
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Consulta completada para estado: {}. Documentos encontrados: {}", status, documents.size());
+
+        return documents;
     }
 
     @Override
     public IdentityDocumentResponseDto create(IdentityDocumentRequestDto request) {
-        log.info("Creando documento de identidad para usuario id: {}", request.getUserId());
+        log.info("Iniciando creación de documento de identidad para usuario id: {}", request.getUserId());
 
         validateUserExists(request.getUserId());
 
+        log.info("Usuario validado correctamente para creación de documento. Usuario id: {}", request.getUserId());
+
         if (identityDocumentRepository.existsByDocumentNumber(request.getDocumentNumber())) {
-            log.warn("Número de documento duplicado: {}", request.getDocumentNumber());
+            log.warn("No se pudo crear documento. Número de documento duplicado: {}", request.getDocumentNumber());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un documento con ese número");
         }
 
@@ -94,6 +111,8 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
             document.setStatus(request.getStatus().toUpperCase());
         }
 
+        log.info("Guardando documento de identidad para usuario id: {}", request.getUserId());
+
         IdentityDocument savedDocument = identityDocumentRepository.save(document);
 
         log.info("Documento de identidad creado correctamente con id: {}", savedDocument.getId());
@@ -103,7 +122,7 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
 
     @Override
     public IdentityDocumentResponseDto update(Long id, IdentityDocumentRequestDto request) {
-        log.info("Actualizando documento de identidad con id: {}", id);
+        log.info("Iniciando actualización de documento de identidad con id: {}", id);
 
         IdentityDocument document = identityDocumentRepository.findById(id)
                 .orElseThrow(() -> {
@@ -113,9 +132,11 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
 
         validateUserExists(request.getUserId());
 
+        log.info("Usuario validado correctamente para actualización de documento. Usuario id: {}", request.getUserId());
+
         identityDocumentRepository.findByDocumentNumber(request.getDocumentNumber()).ifPresent(existingDocument -> {
             if (!existingDocument.getId().equals(id)) {
-                log.warn("Intento de actualizar con número de documento duplicado: {}", request.getDocumentNumber());
+                log.warn("No se pudo actualizar documento id: {}. Número de documento duplicado: {}", id, request.getDocumentNumber());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe otro documento con ese número");
             }
         });
@@ -136,6 +157,8 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
             document.setStatus(request.getStatus().toUpperCase());
         }
 
+        log.info("Guardando actualización de documento de identidad con id: {}", id);
+
         IdentityDocument updatedDocument = identityDocumentRepository.save(document);
 
         log.info("Documento de identidad actualizado correctamente con id: {}", updatedDocument.getId());
@@ -145,13 +168,15 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
 
     @Override
     public IdentityDocumentResponseDto validateDocument(Long id) {
-        log.info("Validando documento de identidad con id: {}", id);
+        log.info("Iniciando validación de documento de identidad con id: {}", id);
 
         IdentityDocument document = identityDocumentRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("No se pudo validar. Documento no encontrado con id: {}", id);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento de identidad no encontrado");
                 });
+
+        log.info("Evaluando reglas de validación para documento id: {}", id);
 
         if (document.getExpirationDate().isBefore(LocalDate.now())) {
             document.setStatus("RECHAZADO");
@@ -166,12 +191,14 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
 
         IdentityDocument validatedDocument = identityDocumentRepository.save(document);
 
+        log.info("Proceso de validación finalizado para documento id: {} con estado: {}", id, validatedDocument.getStatus());
+
         return toResponseDto(validatedDocument);
     }
 
     @Override
     public void delete(Long id) {
-        log.info("Eliminando documento de identidad con id: {}", id);
+        log.info("Iniciando eliminación de documento de identidad con id: {}", id);
 
         if (!identityDocumentRepository.existsById(id)) {
             log.warn("No se pudo eliminar. Documento no encontrado con id: {}", id);
@@ -185,7 +212,11 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
 
     private void validateUserExists(Long userId) {
         try {
+            log.info("Consultando usuario en MS-Users con id: {}", userId);
+
             UserBasicDto user = userClient.findById(userId);
+
+            log.info("Respuesta recibida desde MS-Users para usuario id: {}", userId);
 
             if (user == null) {
                 log.warn("Usuario remoto no encontrado con id: {}", userId);
@@ -197,10 +228,12 @@ public class IdentityDocumentServiceImpl implements IdentityDocumentService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no está activo");
             }
 
+            log.info("Usuario validado correctamente desde MS-Users con id: {}", userId);
+
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Users para usuario id: {}", userId);
+            log.error("Error al comunicarse con MS-Users para usuario id: {}. Detalle: {}", userId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Users no está disponible o el usuario no existe");
         }
     }

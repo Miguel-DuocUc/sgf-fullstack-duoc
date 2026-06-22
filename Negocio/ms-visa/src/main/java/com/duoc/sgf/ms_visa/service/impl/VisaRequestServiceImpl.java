@@ -28,12 +28,16 @@ public class VisaRequestServiceImpl implements VisaRequestService {
 
     @Override
     public List<VisaResponseDto> findAll() {
-        log.info("Listando solicitudes de visa");
+        log.info("Listando todas las solicitudes de visa registradas");
 
-        return visaRequestRepository.findAll()
+        List<VisaResponseDto> visas = visaRequestRepository.findAll()
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Total de solicitudes de visa encontradas: {}", visas.size());
+
+        return visas;
     }
 
     @Override
@@ -46,36 +50,51 @@ public class VisaRequestServiceImpl implements VisaRequestService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud de visa no encontrada");
                 });
 
+        log.info("Solicitud de visa encontrada correctamente con id: {}", id);
+
         return toResponseDto(visaRequest);
     }
 
     @Override
     public List<VisaResponseDto> findByUserId(Long userId) {
-        log.info("Buscando solicitudes de visa por usuario id: {}", userId);
+        log.info("Buscando solicitudes de visa asociadas al usuario id: {}", userId);
 
-        return visaRequestRepository.findByUserId(userId)
+        List<VisaResponseDto> visas = visaRequestRepository.findByUserId(userId)
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Consulta completada para usuario id: {}. Solicitudes encontradas: {}", userId, visas.size());
+
+        return visas;
     }
 
     @Override
     public List<VisaResponseDto> findByStatus(String status) {
         log.info("Buscando solicitudes de visa por estado: {}", status);
 
-        return visaRequestRepository.findByStatus(status.toUpperCase())
+        List<VisaResponseDto> visas = visaRequestRepository.findByStatus(status.toUpperCase())
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Consulta completada para estado: {}. Solicitudes encontradas: {}", status, visas.size());
+
+        return visas;
     }
 
     @Override
     public VisaResponseDto create(VisaRequestDto request) {
-        log.info("Creando solicitud de visa para usuario id: {}", request.getUserId());
+        log.info("Iniciando creación de solicitud de visa para usuario id: {}", request.getUserId());
 
         validateUser(request.getUserId());
+        log.info("Usuario validado correctamente para creación de visa. Usuario id: {}", request.getUserId());
+
         validateIdentityDocument(request.getIdentityDocumentId(), request.getUserId());
+        log.info("Documento de identidad validado correctamente para solicitud de visa. Documento id: {}", request.getIdentityDocumentId());
+
         validateDates(request);
+        log.info("Fechas de solicitud de visa validadas correctamente. Inicio: {}, término: {}", request.getStartDate(), request.getEndDate());
 
         VisaRequest visaRequest = new VisaRequest();
         visaRequest.setUserId(request.getUserId());
@@ -93,6 +112,8 @@ public class VisaRequestServiceImpl implements VisaRequestService {
             visaRequest.setStatus(request.getStatus().toUpperCase());
         }
 
+        log.info("Guardando solicitud de visa para usuario id: {}", request.getUserId());
+
         VisaRequest savedVisaRequest = visaRequestRepository.save(visaRequest);
 
         log.info("Solicitud de visa creada correctamente con id: {}", savedVisaRequest.getId());
@@ -102,7 +123,7 @@ public class VisaRequestServiceImpl implements VisaRequestService {
 
     @Override
     public VisaResponseDto update(Long id, VisaRequestDto request) {
-        log.info("Actualizando solicitud de visa con id: {}", id);
+        log.info("Iniciando actualización de solicitud de visa con id: {}", id);
 
         VisaRequest visaRequest = visaRequestRepository.findById(id)
                 .orElseThrow(() -> {
@@ -111,8 +132,13 @@ public class VisaRequestServiceImpl implements VisaRequestService {
                 });
 
         validateUser(request.getUserId());
+        log.info("Usuario validado correctamente para actualización de visa. Usuario id: {}", request.getUserId());
+
         validateIdentityDocument(request.getIdentityDocumentId(), request.getUserId());
+        log.info("Documento de identidad validado correctamente para actualización de visa. Documento id: {}", request.getIdentityDocumentId());
+
         validateDates(request);
+        log.info("Fechas actualizadas de visa validadas correctamente. Inicio: {}, término: {}", request.getStartDate(), request.getEndDate());
 
         visaRequest.setUserId(request.getUserId());
         visaRequest.setIdentityDocumentId(request.getIdentityDocumentId());
@@ -129,6 +155,8 @@ public class VisaRequestServiceImpl implements VisaRequestService {
             visaRequest.setStatus(request.getStatus().toUpperCase());
         }
 
+        log.info("Guardando actualización de solicitud de visa con id: {}", id);
+
         VisaRequest updatedVisaRequest = visaRequestRepository.save(visaRequest);
 
         log.info("Solicitud de visa actualizada correctamente con id: {}", updatedVisaRequest.getId());
@@ -138,7 +166,7 @@ public class VisaRequestServiceImpl implements VisaRequestService {
 
     @Override
     public VisaResponseDto approve(Long id) {
-        log.info("Aprobando solicitud de visa con id: {}", id);
+        log.info("Iniciando aprobación de solicitud de visa con id: {}", id);
 
         VisaRequest visaRequest = visaRequestRepository.findById(id)
                 .orElseThrow(() -> {
@@ -147,7 +175,10 @@ public class VisaRequestServiceImpl implements VisaRequestService {
                 });
 
         validateUser(visaRequest.getUserId());
+        log.info("Usuario validado correctamente para aprobación de visa. Usuario id: {}", visaRequest.getUserId());
+
         validateIdentityDocument(visaRequest.getIdentityDocumentId(), visaRequest.getUserId());
+        log.info("Documento de identidad validado correctamente para aprobación de visa. Documento id: {}", visaRequest.getIdentityDocumentId());
 
         visaRequest.setStatus("APROBADA");
         visaRequest.setObservations("Solicitud aprobada correctamente");
@@ -161,7 +192,7 @@ public class VisaRequestServiceImpl implements VisaRequestService {
 
     @Override
     public VisaResponseDto reject(Long id) {
-        log.info("Rechazando solicitud de visa con id: {}", id);
+        log.info("Iniciando rechazo de solicitud de visa con id: {}", id);
 
         VisaRequest visaRequest = visaRequestRepository.findById(id)
                 .orElseThrow(() -> {
@@ -174,14 +205,14 @@ public class VisaRequestServiceImpl implements VisaRequestService {
 
         VisaRequest rejectedVisaRequest = visaRequestRepository.save(visaRequest);
 
-        log.info("Solicitud de visa rechazada correctamente con id: {}", id);
+        log.warn("Solicitud de visa rechazada correctamente con id: {}", id);
 
         return toResponseDto(rejectedVisaRequest);
     }
 
     @Override
     public void delete(Long id) {
-        log.info("Eliminando solicitud de visa con id: {}", id);
+        log.info("Iniciando eliminación de solicitud de visa con id: {}", id);
 
         if (!visaRequestRepository.existsById(id)) {
             log.warn("No se pudo eliminar. Solicitud de visa no encontrada con id: {}", id);
@@ -195,7 +226,11 @@ public class VisaRequestServiceImpl implements VisaRequestService {
 
     private void validateUser(Long userId) {
         try {
+            log.info("Consultando usuario en MS-Users con id: {}", userId);
+
             UserBasicDto user = userClient.findById(userId);
+
+            log.info("Respuesta recibida desde MS-Users para usuario id: {}", userId);
 
             if (user == null) {
                 log.warn("Usuario remoto no encontrado con id: {}", userId);
@@ -207,17 +242,23 @@ public class VisaRequestServiceImpl implements VisaRequestService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no está activo");
             }
 
+            log.info("Usuario validado correctamente desde MS-Users con id: {}", userId);
+
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Users para usuario id: {}", userId);
+            log.error("Error al comunicarse con MS-Users para usuario id: {}. Detalle: {}", userId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Users no está disponible o el usuario no existe");
         }
     }
 
     private void validateIdentityDocument(Long identityDocumentId, Long userId) {
         try {
+            log.info("Consultando documento de identidad en MS-Identity con id: {}", identityDocumentId);
+
             IdentityDocumentBasicDto document = identityClient.findById(identityDocumentId);
+
+            log.info("Respuesta recibida desde MS-Identity para documento id: {}", identityDocumentId);
 
             if (document == null) {
                 log.warn("Documento remoto no encontrado con id: {}", identityDocumentId);
@@ -237,21 +278,27 @@ public class VisaRequestServiceImpl implements VisaRequestService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El documento de identidad no está validado");
             }
 
+            log.info("Documento de identidad validado correctamente desde MS-Identity. Documento id: {}", identityDocumentId);
+
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Identity para documento id: {}", identityDocumentId);
+            log.error("Error al comunicarse con MS-Identity para documento id: {}. Detalle: {}", identityDocumentId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Identity no está disponible o el documento no existe");
         }
     }
 
     private void validateDates(VisaRequestDto request) {
+        log.info("Validando fechas de solicitud de visa. Inicio: {}, término: {}", request.getStartDate(), request.getEndDate());
+
         if (request.getEndDate().isBefore(request.getStartDate())
                 || request.getEndDate().isEqual(request.getStartDate())) {
 
             log.warn("Fechas inválidas. Inicio: {}, término: {}", request.getStartDate(), request.getEndDate());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha de término debe ser posterior a la fecha de inicio");
         }
+
+        log.info("Fechas de solicitud de visa validadas correctamente");
     }
 
     private VisaResponseDto toResponseDto(VisaRequest visaRequest) {
