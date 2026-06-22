@@ -1,4 +1,4 @@
-package com.duoc.sgf.ms_auth.config;
+package com.duoc.sgf.ms_auth.config.filter;
 
 import com.duoc.sgf.ms_auth.service.CustomUserDetailsService;
 import com.duoc.sgf.ms_auth.service.JwtService;
@@ -22,6 +22,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return path.contains("/api/v1/auth") ||
+                path.contains("/v3/api-docs") ||
+                path.contains("/swagger-ui") ||
+                path.contains("/docs");
+    }
+
 
     @Override
     protected void doFilterInternal(

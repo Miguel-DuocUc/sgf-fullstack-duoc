@@ -52,7 +52,13 @@ spring:
           uri: lb://ms-audit
           predicates:
             - Path=/api/v1/audit/**
-
+#Swagger (OpenAi)
+        - id: ms-auth-docs-route
+          uri: lb://ms-auth
+          predicates:
+            - Path=/docs/ms-auth/**
+          filters:
+            - RewritePath=/docs/ms-auth/(?<segment>.*), /$\{segment}
 eureka:
   client:
     service-url:
@@ -66,3 +72,10 @@ global:
       jwt:
         secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
         expiration: ${JWT_EXPIRATION:86400000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Autenticación (ms-auth)
+        url: /docs/ms-auth/v3/api-docs

@@ -1,4 +1,4 @@
-package com.duoc.sgf.ms_gateway.filter;
+package com.duoc.sgf.ms_gateway.config.filter;
 
 import com.duoc.sgf.ms_gateway.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +25,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         String path = exchange.getRequest()
                 .getURI()
                 .getPath();
-
-        if (path.contains("/api/v1/auth")) {
+        if (path.contains("/api/v1/auth") ||
+                path.contains("/v3/api-docs") ||
+                path.contains("/swagger-ui") ||
+                path.contains("/docs")) {
             return chain.filter(exchange);
         }
 
