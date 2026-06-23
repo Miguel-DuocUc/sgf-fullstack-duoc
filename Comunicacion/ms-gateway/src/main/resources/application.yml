@@ -8,6 +8,9 @@ spring:
   cloud:
     gateway:
       routes:
+        # ==========================================
+        # RUTAS DE NEGOCIO (APIs reales)
+        # ==========================================
         - id: ms-auth-route
           uri: lb://ms-auth
           predicates:
@@ -52,13 +55,73 @@ spring:
           uri: lb://ms-audit
           predicates:
             - Path=/api/v1/audit/**
-#Swagger (OpenAi)
+
+        # ==========================================
+        # RUTAS DE SWAGGER (Recolección de JSON)
+        # ==========================================
         - id: ms-auth-docs-route
           uri: lb://ms-auth
           predicates:
             - Path=/docs/ms-auth/**
           filters:
             - RewritePath=/docs/ms-auth/(?<segment>.*), /$\{segment}
+
+        - id: ms-logistics-docs-route
+          uri: lb://ms-logistics
+          predicates:
+            - Path=/docs/ms-logistics/**
+          filters:
+            - RewritePath=/docs/ms-logistics/(?<segment>.*), /$\{segment}
+
+        - id: ms-users-docs-route
+          uri: lb://ms-users
+          predicates:
+            - Path=/docs/ms-users/**
+          filters:
+            - RewritePath=/docs/ms-users/(?<segment>.*), /$\{segment}
+
+        - id: ms-bordercontrol-docs-route
+          uri: lb://ms-bordercontrol
+          predicates:
+            - Path=/docs/ms-bordercontrol/**
+          filters:
+            - RewritePath=/docs/ms-bordercontrol/(?<segment>.*), /$\{segment}
+
+        - id: ms-visa-docs-route
+          uri: lb://ms-visa
+          predicates:
+            - Path=/docs/ms-visa/**
+          filters:
+            - RewritePath=/docs/ms-visa/(?<segment>.*), /$\{segment}
+
+        - id: ms-identity-docs-route
+          uri: lb://ms-identity
+          predicates:
+            - Path=/docs/ms-identity/**
+          filters:
+            - RewritePath=/docs/ms-identity/(?<segment>.*), /$\{segment}
+
+        - id: ms-health-docs-route
+          uri: lb://ms-health
+          predicates:
+            - Path=/docs/ms-health/**
+          filters:
+            - RewritePath=/docs/ms-health/(?<segment>.*), /$\{segment}
+
+        - id: ms-alerts-docs-route
+          uri: lb://ms-alerts
+          predicates:
+            - Path=/docs/ms-alerts/**
+          filters:
+            - RewritePath=/docs/ms-alerts/(?<segment>.*), /$\{segment}
+
+        - id: ms-audit-docs-route
+          uri: lb://ms-audit
+          predicates:
+            - Path=/docs/ms-audit/**
+          filters:
+            - RewritePath=/docs/ms-audit/(?<segment>.*), /$\{segment}
+
 eureka:
   client:
     service-url:
@@ -73,9 +136,28 @@ global:
         secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
         expiration: ${JWT_EXPIRATION:86400000}
 
+# ==========================================
+# CONFIGURACIÓN UI DE SWAGGER (Dropdown Menu)
+# ==========================================
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
     urls:
       - name: Autenticación (ms-auth)
         url: /docs/ms-auth/v3/api-docs
+      - name: Logística (ms-logistics)
+        url: /docs/ms-logistics/v3/api-docs
+      - name: Usuarios (ms-users)
+        url: /docs/ms-users/v3/api-docs
+      - name: Control Fronterizo (ms-bordercontrol)
+        url: /docs/ms-bordercontrol/v3/api-docs
+      - name: Visas (ms-visa)
+        url: /docs/ms-visa/v3/api-docs
+      - name: Identidad (ms-identity)
+        url: /docs/ms-identity/v3/api-docs
+      - name: Salud (ms-health)
+        url: /docs/ms-health/v3/api-docs
+      - name: Alertas (ms-alerts)
+        url: /docs/ms-alerts/v3/api-docs
+      - name: Auditoría (ms-audit)
+        url: /docs/ms-audit/v3/api-docs
