@@ -3,7 +3,7 @@
 ## Integrantes
 
 * Sebastián Monsalve
-* Nicolás Chauca
+* Miguel Pasten
 
 ---
 
