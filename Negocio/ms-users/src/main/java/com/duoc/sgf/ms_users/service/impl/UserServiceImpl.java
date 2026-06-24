@@ -1,8 +1,8 @@
 package com.duoc.sgf.ms_users.service.impl;
 
+import com.duoc.sgf.ms_users.model.User;
 import com.duoc.sgf.ms_users.model.dto.UserRequestDto;
 import com.duoc.sgf.ms_users.model.dto.UserResponseDto;
-import com.duoc.sgf.ms_users.model.User;
 import com.duoc.sgf.ms_users.repository.UserRepository;
 import com.duoc.sgf.ms_users.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponseDto> findAll() {
-        log.info("Listando usuarios");
+        log.info("Listando todos los usuarios registrados");
+
         return userRepository.findAll()
                 .stream()
                 .map(this::toResponseDto)
@@ -41,6 +42,7 @@ public class UserServiceImpl implements UserService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
                 });
 
+        log.info("Usuario encontrado correctamente con id: {}", id);
         return toResponseDto(user);
     }
 
@@ -54,6 +56,7 @@ public class UserServiceImpl implements UserService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
                 });
 
+        log.info("Usuario encontrado correctamente con RUT: {}", rut);
         return toResponseDto(user);
     }
 
@@ -61,23 +64,26 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDto> findByRole(String role) {
         log.info("Buscando usuarios por rol: {}", role);
 
-        return userRepository.findByRole(role.toUpperCase())
+        List<UserResponseDto> users = userRepository.findByRole(role.toUpperCase())
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Cantidad de usuarios encontrados para el rol {}: {}", role, users.size());
+        return users;
     }
 
     @Override
     public UserResponseDto create(UserRequestDto request) {
-        log.info("Creando usuario con RUT: {}", request.getRut());
+        log.info("Iniciando creación de usuario con RUT: {}", request.getRut());
 
         if (userRepository.existsByRut(request.getRut())) {
-            log.warn("RUT duplicado: {}", request.getRut());
+            log.warn("No se pudo crear usuario. RUT duplicado: {}", request.getRut());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un usuario con ese RUT");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Correo duplicado: {}", request.getEmail());
+            log.warn("No se pudo crear usuario. Correo duplicado: {}", request.getEmail());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un usuario con ese correo");
         }
 
@@ -104,7 +110,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto update(Long id, UserRequestDto request) {
-        log.info("Actualizando usuario con id: {}", id);
+        log.info("Iniciando actualización de usuario con id: {}", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
@@ -114,14 +120,14 @@ public class UserServiceImpl implements UserService {
 
         userRepository.findByRut(request.getRut()).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(id)) {
-                log.warn("Intento de actualizar con RUT duplicado: {}", request.getRut());
+                log.warn("No se pudo actualizar usuario {}. RUT duplicado: {}", id, request.getRut());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe otro usuario con ese RUT");
             }
         });
 
         userRepository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(id)) {
-                log.warn("Intento de actualizar con correo duplicado: {}", request.getEmail());
+                log.warn("No se pudo actualizar usuario {}. Correo duplicado: {}", id, request.getEmail());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe otro usuario con ese correo");
             }
         });
@@ -148,7 +154,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(Long id) {
-        log.info("Eliminando usuario con id: {}", id);
+        log.info("Iniciando eliminación de usuario con id: {}", id);
 
         if (!userRepository.existsById(id)) {
             log.warn("No se pudo eliminar. Usuario no encontrado con id: {}", id);

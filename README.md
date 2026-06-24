@@ -1,241 +1,251 @@
 # sgf-fullstack-duoc
 
-Proyecto semestral basado en el problema: **Sistema de Gestión Fronterizo**.
-## Integrantes
+Proyecto semestral basado en el problema: Sistema de Gestión Fronterizo.
 
-- Sebastián Monsalve
-- Miguel Pasten
+# Integrantes
 
-## Descripción del proyecto
+* Sebastián Monsalve
+* Miguel Pasten
 
-El Sistema de Gestión Fronterizo es una solución desarrollada con arquitectura de microservicios para apoyar procesos de control en pasos fronterizos.
+# Descripción del proyecto
+
+El Sistema de Gestión Fronterizo es una solución desarrollada bajo una arquitectura de microservicios utilizando Spring Boot y Spring Cloud.
 
 El sistema permite gestionar usuarios, documentos de identidad, solicitudes de visa, declaraciones sanitarias, controles fronterizos, autenticación, logística, alertas y auditoría.
 
-El objetivo principal es automatizar el flujo de revisión fronteriza, permitiendo que distintos microservicios se comuniquen entre sí para validar la información necesaria antes de autorizar un control fronterizo.
+El objetivo principal es automatizar el proceso de validación fronteriza mediante servicios independientes que se comunican entre sí para verificar la información necesaria antes de autorizar el ingreso de una persona.
 
-## Funcionalidades implementadas
+# Funcionalidades implementadas
 
-| Microservicio | Funcionalidad | Puerto |
-|---|---|---|
-| ms-eurekaserver | Registro de microservicios activos | 8761 |
-| ms-gateway | Punto de entrada central del sistema | 8080 |
-| ms-auth | Autenticación y autorización de usuarios | 8081 |
-| ms-logistics | Gestión logística del proceso fronterizo | 8082 |
-| ms-users | Gestión de usuarios del sistema | 8083 |
-| ms-bordercontrol | Validación final y control fronterizo | 8084|
-| ms-visa | Gestión de solicitudes de visa | 8085 |
-| ms-identity | Gestión y validación de documentos de identidad | 8086 |
-| ms-health | Gestión de declaraciones sanitarias | 8087 |
-| ms-alerts | Gestión de alertas del sistema | 8088 |
-| ms-audit | Registro de auditorías y trazabilidad | 8089 |
+| Microservicio    | Funcionalidad                                   |
+| ---------------- | ----------------------------------------------- |
+| ms-eurekaserver  | Registro y descubrimiento de microservicios     |
+| ms-gateway       | Punto de entrada central del sistema            |
+| ms-auth          | Autenticación y autorización                    |
+| ms-logistics     | Gestión logística del proceso fronterizo        |
+| ms-users         | Gestión de usuarios                             |
+| ms-bordercontrol | Validación final y control fronterizo           |
+| ms-visa          | Gestión de solicitudes de visa                  |
+| ms-identity      | Gestión y validación de documentos de identidad |
+| ms-health        | Gestión de declaraciones sanitarias             |
+| ms-alerts        | Gestión de alertas                              |
+| ms-audit         | Registro de auditorías y trazabilidad           |
 
-
-
-
-## Flujo principal del sistema
+# Flujo principal del sistema
 
 El flujo principal del sistema es:
 
-1. Se registra un usuario en `ms-users`.
-2. Se registra y valida un documento de identidad en `ms-identity`.
-3. Se crea y aprueba una solicitud de visa en `ms-visa`.
-4. Se crea y evalúa una declaración sanitaria en `ms-health`.
-5. `ms-bordercontrol` consulta los microservicios anteriores y autoriza o rechaza el control fronterizo.
+1. Se registra un usuario en ms-users.
+2. Se registra y valida un documento de identidad en ms-identity.
+3. Se crea y aprueba una solicitud de visa en ms-visa.
+4. Se registra una declaración sanitaria en ms-health.
+5. ms-bordercontrol consulta los microservicios anteriores y determina si el control fronterizo puede ser autorizado.
+6. Si todas las validaciones son correctas, el control fronterizo queda autorizado.
 
-`ms-bordercontrol` consume información de otros microservicios mediante OpenFeign para validar:
+ms-bordercontrol consume información de otros microservicios mediante OpenFeign para validar:
 
-- Usuario activo.
-- Documento de identidad validado.
-- Visa aprobada.
-- Declaración sanitaria apta.
+* Usuario activo.
+* Documento de identidad validado.
+* Visa aprobada.
+* Declaración sanitaria apta.
 
-Si todas las condiciones se cumplen, el control fronterizo queda en estado `AUTORIZADO`.
+# Tecnologías utilizadas
 
-## Tecnologías utilizadas
+* Java 21
+* Spring Boot
+* Spring Web
+* Spring Data JPA
+* Hibernate
+* Spring Security
+* Spring Cloud Gateway
+* Eureka Server
+* OpenFeign
+* Apache Kafka
+* Oracle Database
+* MySQL
+* Flyway Migration
+* Bean Validation (JSR-380)
+* Lombok
+* Maven
+* Docker
+* Docker Compose
+* Postman
+* GitHub
 
-- Java 21
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- Hibernate
-- Oracle Database
-- MySQL
-- Docker
-- Lombok
-- Bean Validation
-- OpenFeign
-- Eureka Server
-- Spring Cloud Gateway
-- Kafka
-- Postman
-- GitHub
+# Bases de datos usadas
 
-## Bases de datos usadas
+El proyecto utiliza bases de datos ejecutadas mediante Docker.
 
-El proyecto utiliza bases de datos levantadas mediante Docker.
+| Motor           | Uso                                                                 |
+| --------------- | ------------------------------------------------------------------- |
+| Oracle Database | ms-users, ms-identity, ms-visa, ms-bordercontrol, ms-auth, ms-audit |
+| MySQL           | ms-health                                                           |
+| MySQL           | ms-logistics y ms-alerts                                            |
 
-| Contenedor | Motor | Puerto local | Uso |
-|---|---|---|---|
-| oracle-free | Oracle Free | 1521 | ms-users, ms-identity, ms-visa, ms-bordercontrol, ms-auth, ms-audit |
-| mysql-health | MySQL 8.4 | 3306 | ms-health |
-| mysql-logistics | MySQL 8.0 | 3307 | ms-logistics y ms-alerts |
+# Comunicación entre microservicios
 
-## Pasos para ejecutar el proyecto
+La comunicación entre microservicios se realiza mediante OpenFeign.
 
-### 1. Abrir Docker Desktop
+Actualmente se implementan integraciones entre:
 
-Antes de iniciar los microservicios, se debe abrir Docker Desktop y verificar que esté funcionando.
+* ms-bordercontrol ↔ ms-users
+* ms-bordercontrol ↔ ms-identity
+* ms-bordercontrol ↔ ms-visa
+* ms-bordercontrol ↔ ms-health
 
-Para revisar los contenedores activos:
+Además, se incorpora Apache Kafka para la publicación de eventos relacionados con el control fronterizo.
 
-```powershell
+# Características técnicas implementadas
+
+* Arquitectura basada en microservicios.
+* Patrón CSR (Controller - Service - Repository).
+* DTOs para comunicación entre capas.
+* Persistencia mediante JPA/Hibernate.
+* Migraciones SQL por microservicio.
+* Manejo global de excepciones mediante ApiExceptionHandler.
+* Validaciones utilizando Bean Validation.
+* Seguridad mediante Spring Security.
+* Comunicación distribuida mediante OpenFeign.
+* Eventos asincrónicos mediante Kafka.
+* Contenerización mediante Docker.
+* Registro y descubrimiento de servicios mediante Eureka.
+
+# Pasos para ejecutar el proyecto
+
+## 1. Levantar Docker
+
+Verificar que Docker Desktop se encuentre iniciado.
+
+Comprobar funcionamiento:
+
+```bash
 docker ps
 ```
 
-### 2. Iniciar las bases de datos
+## 2. Levantar infraestructura
 
-Iniciar Oracle:
+Desde la raíz del proyecto:
 
-```powershell
-docker start oracle-free
+```bash
+docker compose up -d
 ```
 
-Iniciar MySQL Health:
+Verificar contenedores:
 
-```powershell
-docker start mysql-health
+```bash
+docker ps
 ```
 
-Iniciar MySQL Logistics:
+## 3. Iniciar los microservicios
 
-```powershell
-docker start mysql-logistics
-```
+Orden recomendado:
 
-Si los contenedores no existen, se pueden crear con los siguientes comandos:
+1. ms-eurekaserver
+2. ms-auth
+3. ms-logistics
+4. ms-alerts
+5. ms-audit
+6. ms-users
+7. ms-identity
+8. ms-visa
+9. ms-health
+10. ms-bordercontrol
+11. ms-gateway
 
-```powershell
-docker run --name oracle-free -e ORACLE_PASSWORD="Admin12345*" -p 1521:1521 -d gvenzl/oracle-free:23-slim
-```
+## 4. Verificar Eureka
 
-```powershell
-docker run --name mysql-health -e MYSQL_ROOT_PASSWORD=1234 -e MYSQL_DATABASE=ms_health -e MYSQL_USER=MS_HEALTH -e MYSQL_PASSWORD=1234 -p 3306:3306 -d mysql:8.4
-```
-
-```powershell
-docker run --name mysql-logistics -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=ms_logistics -p 3307:3306 -d mysql:8.0
-```
-
-### 3. Iniciar los microservicios
-
-El orden recomendado para iniciar el sistema es:
-
-```text
-1. MsEurekaserverApplication   → 8761
-2. MsAuthApplication           → 8081
-3. MsLogisticsApplication      → 8082
-4. MsAlertsApplication         → 8083
-5. MsAuditApplication          → 8084
-6. MsUsersApplication          → 8089
-7. MsIdentityApplication       → 8087
-8. MsVisaApplication           → 8086
-9. MsHealthApplication         → 8091
-10. MsBorderControlApplication → 8092
-11. MsGatewayApplication       → 8080
-```
-
-El Gateway debe iniciarse al final, porque funciona como punto de entrada hacia los demás microservicios.
-
-### 4. Verificar Eureka
-
-Una vez iniciado `ms-eurekaserver`, se puede revisar en el navegador:
+Abrir:
 
 ```text
 http://localhost:8761
 ```
 
-En esa página deben aparecer los microservicios registrados con estado `UP`.
+Todos los microservicios deben aparecer en estado UP.
 
-### 5. Probar el Gateway
+## 5. Probar Gateway
 
-Cuando todos los microservicios estén activos, se pueden probar los endpoints desde el Gateway:
-
-```http
-GET http://localhost:8080/api/v1/users
-GET http://localhost:8080/api/v1/identity-documents
-GET http://localhost:8080/api/v1/visa-requests
-GET http://localhost:8080/api/v1/health-declarations
-GET http://localhost:8080/api/v1/border-controls
-GET http://localhost:8080/api/v1/alerts
-GET http://localhost:8080/api/v1/logistics
-```
-
-## Endpoints principales del flujo
-
-### Crear usuario
+Ejemplos:
 
 ```http
-POST http://localhost:8080/api/v1/users
+GET /api/v1/users
+GET /api/v1/identity-documents
+GET /api/v1/visa-requests
+GET /api/v1/health-declarations
+GET /api/v1/border-controls
+GET /api/v1/logistics
+GET /api/v1/alerts
 ```
 
-### Crear documento de identidad
+# Endpoints principales
+
+## Usuarios
 
 ```http
-POST http://localhost:8080/api/v1/identity-documents
+POST /api/v1/users
+GET /api/v1/users
+PUT /api/v1/users/{id}
+DELETE /api/v1/users/{id}
 ```
 
-### Validar documento
+## Identidad
 
 ```http
-PATCH http://localhost:8080/api/v1/identity-documents/{id}/validate
+POST /api/v1/identity-documents
+PATCH /api/v1/identity-documents/{id}/validate
 ```
 
-### Crear solicitud de visa
+## Visa
 
 ```http
-POST http://localhost:8080/api/v1/visa-requests
+POST /api/v1/visa-requests
+PATCH /api/v1/visa-requests/{id}/approve
 ```
 
-### Aprobar visa
+## Salud
 
 ```http
-PATCH http://localhost:8080/api/v1/visa-requests/{id}/approve
+POST /api/v1/health-declarations
+PATCH /api/v1/health-declarations/{id}/evaluate
 ```
 
-### Crear declaración sanitaria
+## Control Fronterizo
 
 ```http
-POST http://localhost:8080/api/v1/health-declarations
+POST /api/v1/border-controls
+GET /api/v1/border-controls
 ```
 
-### Evaluar declaración sanitaria
+# Migraciones y persistencia
 
-```http
-PATCH http://localhost:8080/api/v1/health-declarations/{id}/evaluate
-```
+Cada microservicio incorpora scripts de migración inicial para la creación de tablas y estructuras de datos.
 
-### Crear control fronterizo
-
-```http
-POST http://localhost:8080/api/v1/border-controls
-```
-
-## Migraciones y scripts SQL
-
-El proyecto incluye scripts SQL iniciales para documentar la estructura de base de datos de los microservicios.
-
-Durante la ejecución local se utiliza:
+Durante las pruebas locales se utiliza:
 
 ```properties
 spring.jpa.hibernate.ddl-auto=update
-spring.flyway.enabled=false
 ```
 
-Esto permite que Hibernate actualice las tablas automáticamente durante las pruebas locales.
+Las estructuras incluyen:
 
-## Control de versiones
+* Usuarios
+* Documentos de identidad
+* Solicitudes de visa
+* Declaraciones sanitarias
+* Controles fronterizos
+
+# Control de versiones
 
 El proyecto utiliza GitHub como herramienta de control de versiones.
 
-Los commits se realizaron con mensajes técnicos, separando cambios de configuración, documentación, scripts SQL, controladores, servicios, DTOs y comunicación entre microservicios.
+Los commits fueron organizados por módulos y funcionalidades, documentando:
+
+* Actualización de usuarios e identidad.
+* Actualización de visas y declaraciones sanitarias.
+* Actualización del flujo de control fronterizo.
+* Integración mediante OpenFeign.
+* Configuración Docker y despliegue.
+* Mejoras de seguridad, validaciones y manejo de excepciones.
+
+# Proyecto Académico
+
+Proyecto desarrollado para la asignatura Desarrollo FullStack, aplicando arquitectura distribuida basada en microservicios, persistencia de datos, comunicación entre servicios, seguridad, Docker, Eureka, Gateway, OpenFeign y Kafka.

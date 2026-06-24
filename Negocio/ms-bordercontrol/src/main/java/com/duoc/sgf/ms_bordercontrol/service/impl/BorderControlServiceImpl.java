@@ -38,12 +38,16 @@ public class BorderControlServiceImpl implements BorderControlService {
 
     @Override
     public List<BorderControlResponseDto> findAll() {
-        log.info("Listando controles fronterizos");
+        log.info("Listando todos los controles fronterizos registrados");
 
-        return borderControlRepository.findAll()
+        List<BorderControlResponseDto> controls = borderControlRepository.findAll()
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Total de controles fronterizos encontrados: {}", controls.size());
+
+        return controls;
     }
 
     @Override
@@ -56,6 +60,8 @@ public class BorderControlServiceImpl implements BorderControlService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Control fronterizo no encontrado");
                 });
 
+        log.info("Control fronterizo encontrado correctamente con id: {}", id);
+
         return toResponseDto(borderControl);
     }
 
@@ -63,25 +69,34 @@ public class BorderControlServiceImpl implements BorderControlService {
     public List<BorderControlResponseDto> findByUserId(Long userId) {
         log.info("Buscando controles fronterizos por usuario id: {}", userId);
 
-        return borderControlRepository.findByUserId(userId)
+        List<BorderControlResponseDto> controls = borderControlRepository.findByUserId(userId)
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Consulta completada para usuario id: {}. Controles encontrados: {}", userId, controls.size());
+
+        return controls;
     }
 
     @Override
     public List<BorderControlResponseDto> findByStatus(String status) {
         log.info("Buscando controles fronterizos por estado: {}", status);
 
-        return borderControlRepository.findByStatus(status.toUpperCase())
+        List<BorderControlResponseDto> controls = borderControlRepository.findByStatus(status.toUpperCase())
                 .stream()
                 .map(this::toResponseDto)
                 .toList();
+
+        log.info("Consulta completada para estado: {}. Controles encontrados: {}", status, controls.size());
+
+        return controls;
     }
 
     @Override
     public BorderControlResponseDto create(BorderControlRequestDto request) {
-        log.info("Creando control fronterizo para usuario id: {}", request.getUserId());
+        log.info("Iniciando creación de control fronterizo para usuario id: {}", request.getUserId());
+        log.info("Iniciando validación de requisitos para crear control fronterizo");
 
         validateAllRequirements(request);
 
@@ -90,10 +105,7 @@ public class BorderControlServiceImpl implements BorderControlService {
         borderControl.setIdentityDocumentId(request.getIdentityDocumentId());
         borderControl.setVisaRequestId(request.getVisaRequestId());
         borderControl.setHealthDeclarationId(request.getHealthDeclarationId());
-
-        // Asignación directa del ID validado
         borderControl.setLogisticsCheckpointId(request.getLogisticsCheckpointId());
-
         borderControl.setOfficerName(request.getOfficerName());
         borderControl.setMovementType(request.getMovementType().toUpperCase());
 
@@ -109,7 +121,11 @@ public class BorderControlServiceImpl implements BorderControlService {
             borderControl.setObservations(request.getObservations());
         }
 
+        log.info("Guardando control fronterizo para usuario id: {}", request.getUserId());
+
         BorderControl savedBorderControl = borderControlRepository.save(borderControl);
+
+        log.info("Enviando evento Kafka para control fronterizo id: {}", savedBorderControl.getId());
 
         borderControlEventProducer.publishBorderControlEvent(savedBorderControl);
 
@@ -120,7 +136,7 @@ public class BorderControlServiceImpl implements BorderControlService {
 
     @Override
     public BorderControlResponseDto update(Long id, BorderControlRequestDto request) {
-        log.info("Actualizando control fronterizo con id: {}", id);
+        log.info("Iniciando actualización de control fronterizo con id: {}", id);
 
         BorderControl borderControl = borderControlRepository.findById(id)
                 .orElseThrow(() -> {
@@ -128,7 +144,10 @@ public class BorderControlServiceImpl implements BorderControlService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Control fronterizo no encontrado");
                 });
 
+        log.info("Validando requisitos para actualización de control fronterizo id: {}", id);
+
         validateAllRequirements(request);
+
         borderControl.setUserId(request.getUserId());
         borderControl.setIdentityDocumentId(request.getIdentityDocumentId());
         borderControl.setVisaRequestId(request.getVisaRequestId());
@@ -145,7 +164,11 @@ public class BorderControlServiceImpl implements BorderControlService {
 
         borderControl.setObservations(request.getObservations());
 
+        log.info("Guardando actualización de control fronterizo con id: {}", id);
+
         BorderControl updatedBorderControl = borderControlRepository.save(borderControl);
+
+        log.info("Enviando evento Kafka por actualización de control fronterizo id: {}", updatedBorderControl.getId());
 
         borderControlEventProducer.publishBorderControlEvent(updatedBorderControl);
 
@@ -169,11 +192,11 @@ public class BorderControlServiceImpl implements BorderControlService {
         request.setIdentityDocumentId(borderControl.getIdentityDocumentId());
         request.setVisaRequestId(borderControl.getVisaRequestId());
         request.setHealthDeclarationId(borderControl.getHealthDeclarationId());
-
         request.setLogisticsCheckpointId(borderControl.getLogisticsCheckpointId());
-
         request.setOfficerName(borderControl.getOfficerName());
         request.setMovementType(borderControl.getMovementType());
+
+        log.info("Ejecutando validaciones para evaluación de control fronterizo id: {}", id);
 
         validateAllRequirements(request);
 
@@ -181,6 +204,8 @@ public class BorderControlServiceImpl implements BorderControlService {
         borderControl.setObservations("Evaluación aprobada. El viajero cumple con todos los requisitos.");
 
         BorderControl evaluatedBorderControl = borderControlRepository.save(borderControl);
+
+        log.info("Enviando evento Kafka por evaluación de control fronterizo id: {}", evaluatedBorderControl.getId());
 
         borderControlEventProducer.publishBorderControlEvent(evaluatedBorderControl);
 
@@ -203,64 +228,91 @@ public class BorderControlServiceImpl implements BorderControlService {
         log.info("Control fronterizo eliminado correctamente con id: {}", id);
     }
 
-
     private void validateAllRequirements(BorderControlRequestDto request) {
+        log.info("Validando requisitos completos para usuario id: {}", request.getUserId());
+
         UserBasicDto user = validateUser(request.getUserId());
         IdentityDocumentBasicDto document = validateIdentityDocument(request.getIdentityDocumentId(), request.getUserId());
         VisaRequestBasicDto visa = validateVisa(request.getVisaRequestId(), request.getUserId(), request.getIdentityDocumentId());
         HealthDeclarationBasicDto health = validateHealth(request.getHealthDeclarationId(), request.getUserId(), request.getIdentityDocumentId());
         validateCheckpoint(request.getLogisticsCheckpointId());
 
-        log.info("Validaciones completadas correctamente. Usuario: {}, Documento: {}, Visa: {}, Salud: {}, Checkpoint ID: {}",
-                user.getId(), document.getId(), visa.getId(), health.getId(), request.getLogisticsCheckpointId());
+        log.info(
+                "Validaciones completadas correctamente. Usuario: {}, Documento: {}, Visa: {}, Salud: {}, Checkpoint ID: {}",
+                user.getId(),
+                document.getId(),
+                visa.getId(),
+                health.getId(),
+                request.getLogisticsCheckpointId()
+        );
     }
 
     private void validateCheckpoint(Long checkpointId) {
         try {
+            log.info("Consultando paso fronterizo en MS-Logistics con id: {}", checkpointId);
+
             Object checkpointInfo = logisticsClient.obtenerPasoFronterizoPorId(checkpointId);
 
             if (checkpointInfo == null) {
+                log.warn("Paso fronterizo no encontrado en MS-Logistics con id: {}", checkpointId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El paso fronterizo indicado no existe");
             }
+
+            log.info("Paso fronterizo validado correctamente en MS-Logistics con id: {}", checkpointId);
+
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Logistics para checkpoint id: {}", checkpointId);
+            log.error("Error al comunicarse con MS-Logistics para checkpoint id: {}. Detalle: {}", checkpointId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Logistics no está disponible o el paso fronterizo (ID: " + checkpointId + ") no existe.");
         }
     }
 
     private UserBasicDto validateUser(Long userId) {
         try {
+            log.info("Consultando usuario en MS-Users con id: {}", userId);
+
             UserBasicDto user = userClient.findById(userId);
 
+            log.info("Respuesta recibida desde MS-Users para usuario id: {}", userId);
+
             if (user == null) {
+                log.warn("Usuario remoto no encontrado con id: {}", userId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no existe");
             }
 
             if (!"ACTIVO".equalsIgnoreCase(user.getStatus())) {
+                log.warn("Usuario no activo. Id: {}, estado: {}", userId, user.getStatus());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no está activo");
             }
+
+            log.info("Usuario validado correctamente desde MS-Users con id: {}", userId);
 
             return user;
 
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Users para usuario id: {}", userId);
+            log.error("Error al comunicarse con MS-Users para usuario id: {}. Detalle: {}", userId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Users no está disponible o el usuario no existe");
         }
     }
 
     private IdentityDocumentBasicDto validateIdentityDocument(Long identityDocumentId, Long userId) {
         try {
+            log.info("Consultando documento de identidad en MS-Identity con id: {}", identityDocumentId);
+
             IdentityDocumentBasicDto document = identityClient.findById(identityDocumentId);
 
+            log.info("Respuesta recibida desde MS-Identity para documento id: {}", identityDocumentId);
+
             if (document == null) {
+                log.warn("Documento remoto no encontrado con id: {}", identityDocumentId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El documento de identidad no existe");
             }
 
             if (!document.getUserId().equals(userId)) {
+                log.warn("Documento id {} no pertenece al usuario id {}", identityDocumentId, userId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El documento no pertenece al usuario indicado");
             }
 
@@ -268,75 +320,98 @@ public class BorderControlServiceImpl implements BorderControlService {
                     || "VALIDADO".equalsIgnoreCase(document.getStatus());
 
             if (!validDocument) {
+                log.warn("Documento no validado. Id: {}, estado: {}", identityDocumentId, document.getStatus());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El documento de identidad no está validado");
             }
+
+            log.info("Documento validado correctamente desde MS-Identity con id: {}", identityDocumentId);
 
             return document;
 
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Identity para documento id: {}", identityDocumentId);
+            log.error("Error al comunicarse con MS-Identity para documento id: {}. Detalle: {}", identityDocumentId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Identity no está disponible o el documento no existe");
         }
     }
 
     private VisaRequestBasicDto validateVisa(Long visaRequestId, Long userId, Long identityDocumentId) {
         try {
+            log.info("Consultando visa en MS-Visa con id: {}", visaRequestId);
+
             VisaRequestBasicDto visa = visaClient.findById(visaRequestId);
 
+            log.info("Respuesta recibida desde MS-Visa para visa id: {}", visaRequestId);
+
             if (visa == null) {
+                log.warn("Solicitud de visa remota no encontrada con id: {}", visaRequestId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud de visa no existe");
             }
 
             if (!visa.getUserId().equals(userId)) {
+                log.warn("Visa id {} no pertenece al usuario id {}", visaRequestId, userId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La visa no pertenece al usuario indicado");
             }
 
             if (!visa.getIdentityDocumentId().equals(identityDocumentId)) {
+                log.warn("Visa id {} no corresponde al documento id {}", visaRequestId, identityDocumentId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La visa no corresponde al documento indicado");
             }
 
             if (!"APROBADA".equalsIgnoreCase(visa.getStatus())) {
+                log.warn("Visa no aprobada. Id: {}, estado: {}", visaRequestId, visa.getStatus());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La visa no está aprobada");
             }
+
+            log.info("Visa validada correctamente desde MS-Visa con id: {}", visaRequestId);
 
             return visa;
 
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Visa para visa id: {}", visaRequestId);
+            log.error("Error al comunicarse con MS-Visa para visa id: {}. Detalle: {}", visaRequestId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Visa no está disponible o la visa no existe");
         }
     }
 
     private HealthDeclarationBasicDto validateHealth(Long healthDeclarationId, Long userId, Long identityDocumentId) {
         try {
+            log.info("Consultando declaración sanitaria en MS-Health con id: {}", healthDeclarationId);
+
             HealthDeclarationBasicDto health = healthClient.findById(healthDeclarationId);
 
+            log.info("Respuesta recibida desde MS-Health para declaración id: {}", healthDeclarationId);
+
             if (health == null) {
+                log.warn("Declaración sanitaria remota no encontrada con id: {}", healthDeclarationId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La declaración sanitaria no existe");
             }
 
             if (!health.getUserId().equals(userId)) {
+                log.warn("Declaración sanitaria id {} no pertenece al usuario id {}", healthDeclarationId, userId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La declaración sanitaria no pertenece al usuario indicado");
             }
 
             if (!health.getIdentityDocumentId().equals(identityDocumentId)) {
+                log.warn("Declaración sanitaria id {} no corresponde al documento id {}", healthDeclarationId, identityDocumentId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La declaración sanitaria no corresponde al documento indicado");
             }
 
             if (!"APTO".equalsIgnoreCase(health.getStatus())) {
+                log.warn("Declaración sanitaria no apta. Id: {}, estado: {}", healthDeclarationId, health.getStatus());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La declaración sanitaria no está apta");
             }
+
+            log.info("Declaración sanitaria validada correctamente desde MS-Health con id: {}", healthDeclarationId);
 
             return health;
 
         } catch (ResponseStatusException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error al comunicarse con MS-Health para declaración id: {}", healthDeclarationId);
+            log.error("Error al comunicarse con MS-Health para declaración id: {}. Detalle: {}", healthDeclarationId, ex.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "MS-Health no está disponible o la declaración no existe");
         }
     }
@@ -357,3 +432,4 @@ public class BorderControlServiceImpl implements BorderControlService {
         );
     }
 }
+
