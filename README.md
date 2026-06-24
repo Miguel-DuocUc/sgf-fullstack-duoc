@@ -1,251 +1,189 @@
-# sgf-fullstack-duoc
+# Sistema de Gestión Fronteriza (SGF)
 
-Proyecto semestral basado en el problema: Sistema de Gestión Fronterizo.
-
-# Integrantes
+## Integrantes
 
 * Sebastián Monsalve
-* Miguel Pasten
+* Nicolás Chauca
 
-# Descripción del proyecto
+---
 
-El Sistema de Gestión Fronterizo es una solución desarrollada bajo una arquitectura de microservicios utilizando Spring Boot y Spring Cloud.
+# Descripción del Proyecto
 
-El sistema permite gestionar usuarios, documentos de identidad, solicitudes de visa, declaraciones sanitarias, controles fronterizos, autenticación, logística, alertas y auditoría.
+El Sistema de Gestión Fronteriza (SGF) es una plataforma basada en arquitectura de microservicios orientada a la gestión y control de procesos fronterizos. La solución permite administrar usuarios, documentos de identidad, solicitudes de visa, declaraciones de salud, logística, control fronterizo, auditoría y alertas, utilizando una arquitectura distribuida y escalable.
 
-El objetivo principal es automatizar el proceso de validación fronteriza mediante servicios independientes que se comunican entre sí para verificar la información necesaria antes de autorizar el ingreso de una persona.
+El proyecto fue desarrollado utilizando Spring Boot, Spring Cloud, Oracle Database, Kafka, Docker y API Gateway.
 
-# Funcionalidades implementadas
+---
 
-| Microservicio    | Funcionalidad                                   |
-| ---------------- | ----------------------------------------------- |
-| ms-eurekaserver  | Registro y descubrimiento de microservicios     |
-| ms-gateway       | Punto de entrada central del sistema            |
-| ms-auth          | Autenticación y autorización                    |
-| ms-logistics     | Gestión logística del proceso fronterizo        |
-| ms-users         | Gestión de usuarios                             |
-| ms-bordercontrol | Validación final y control fronterizo           |
-| ms-visa          | Gestión de solicitudes de visa                  |
-| ms-identity      | Gestión y validación de documentos de identidad |
-| ms-health        | Gestión de declaraciones sanitarias             |
-| ms-alerts        | Gestión de alertas                              |
-| ms-audit         | Registro de auditorías y trazabilidad           |
+# Arquitectura de Microservicios
 
-# Flujo principal del sistema
+El sistema está compuesto por los siguientes microservicios:
 
-El flujo principal del sistema es:
+## Comunicación
 
-1. Se registra un usuario en ms-users.
-2. Se registra y valida un documento de identidad en ms-identity.
-3. Se crea y aprueba una solicitud de visa en ms-visa.
-4. Se registra una declaración sanitaria en ms-health.
-5. ms-bordercontrol consulta los microservicios anteriores y determina si el control fronterizo puede ser autorizado.
-6. Si todas las validaciones son correctas, el control fronterizo queda autorizado.
+* ms-eurekaserver
+* ms-gateway
 
-ms-bordercontrol consume información de otros microservicios mediante OpenFeign para validar:
+## Seguridad
 
-* Usuario activo.
-* Documento de identidad validado.
-* Visa aprobada.
-* Declaración sanitaria apta.
+* ms-auth
+* ms-audit
+* ms-alerts
 
-# Tecnologías utilizadas
+## Negocio
+
+* ms-users
+* ms-identity
+* ms-visa
+* ms-logistics
+* ms-health
+* ms-bordercontrol
+
+---
+
+# Tecnologías Utilizadas
 
 * Java 21
 * Spring Boot
-* Spring Web
-* Spring Data JPA
-* Hibernate
-* Spring Security
 * Spring Cloud Gateway
 * Eureka Server
 * OpenFeign
-* Apache Kafka
 * Oracle Database
-* MySQL
-* Flyway Migration
-* Bean Validation (JSR-380)
-* Lombok
+* Apache Kafka
 * Maven
 * Docker
-* Docker Compose
-* Postman
+* Swagger OpenAPI
 * GitHub
+* Trello
 
-# Bases de datos usadas
+---
 
-El proyecto utiliza bases de datos ejecutadas mediante Docker.
+# Comunicación entre Microservicios
 
-| Motor           | Uso                                                                 |
-| --------------- | ------------------------------------------------------------------- |
-| Oracle Database | ms-users, ms-identity, ms-visa, ms-bordercontrol, ms-auth, ms-audit |
-| MySQL           | ms-health                                                           |
-| MySQL           | ms-logistics y ms-alerts                                            |
+La comunicación entre servicios se realiza mediante OpenFeign, permitiendo el intercambio de información entre los distintos dominios del sistema.
 
-# Comunicación entre microservicios
+Ejemplos:
 
-La comunicación entre microservicios se realiza mediante OpenFeign.
+* Identity consulta usuarios en Users.
+* Visa consulta documentos de identidad.
+* BorderControl consulta información de salud y visas.
+* Audit registra eventos generados por otros servicios.
 
-Actualmente se implementan integraciones entre:
+---
 
-* ms-bordercontrol ↔ ms-users
-* ms-bordercontrol ↔ ms-identity
-* ms-bordercontrol ↔ ms-visa
-* ms-bordercontrol ↔ ms-health
+# API Gateway
 
-Además, se incorpora Apache Kafka para la publicación de eventos relacionados con el control fronterizo.
+El sistema utiliza Spring Cloud Gateway para centralizar el acceso a los microservicios.
 
-# Características técnicas implementadas
+Puerto:
 
-* Arquitectura basada en microservicios.
-* Patrón CSR (Controller - Service - Repository).
-* DTOs para comunicación entre capas.
-* Persistencia mediante JPA/Hibernate.
-* Migraciones SQL por microservicio.
-* Manejo global de excepciones mediante ApiExceptionHandler.
-* Validaciones utilizando Bean Validation.
-* Seguridad mediante Spring Security.
-* Comunicación distribuida mediante OpenFeign.
-* Eventos asincrónicos mediante Kafka.
-* Contenerización mediante Docker.
-* Registro y descubrimiento de servicios mediante Eureka.
-
-# Pasos para ejecutar el proyecto
-
-## 1. Levantar Docker
-
-Verificar que Docker Desktop se encuentre iniciado.
-
-Comprobar funcionamiento:
-
-```bash
-docker ps
+```text
+9090
 ```
 
-## 2. Levantar infraestructura
+Rutas principales:
+
+```text
+/api/users/**
+/api/identity/**
+/api/visa/**
+/api/logistics/**
+/api/health/**
+/api/bordercontrol/**
+/api/auth/**
+/api/audit/**
+/api/alerts/**
+```
+
+---
+
+# Documentación Swagger
+
+Swagger se encuentra habilitado en los microservicios para la exploración y prueba de endpoints.
+
+Ejemplo local:
+
+```text
+http://localhost:8081/swagger-ui.html
+http://localhost:8082/swagger-ui.html
+http://localhost:8083/swagger-ui.html
+```
+
+---
+
+# Ejecución del Proyecto
+
+## Requisitos
+
+* Docker Desktop
+* Java 21
+* Maven
+* Git
+
+## Clonar repositorio
+
+```bash
+git clone <url-del-repositorio>
+```
+
+## Levantar el proyecto
 
 Desde la raíz del proyecto:
 
 ```bash
-docker compose up -d
+docker compose up --build -d
 ```
 
-Verificar contenedores:
+## Verificar contenedores
 
 ```bash
 docker ps
 ```
 
-## 3. Iniciar los microservicios
+## Detener servicios
 
-Orden recomendado:
+```bash
+docker compose down
+```
 
-1. ms-eurekaserver
-2. ms-auth
-3. ms-logistics
-4. ms-alerts
-5. ms-audit
-6. ms-users
-7. ms-identity
-8. ms-visa
-9. ms-health
-10. ms-bordercontrol
-11. ms-gateway
+---
 
-## 4. Verificar Eureka
+# Base de Datos
 
-Abrir:
+El sistema utiliza Oracle Database ejecutándose mediante Docker.
+
+Puerto Oracle:
 
 ```text
-http://localhost:8761
+1555
 ```
 
-Todos los microservicios deben aparecer en estado UP.
+---
 
-## 5. Probar Gateway
+# Herramientas de Gestión
 
-Ejemplos:
+El proyecto fue gestionado utilizando:
 
-```http
-GET /api/v1/users
-GET /api/v1/identity-documents
-GET /api/v1/visa-requests
-GET /api/v1/health-declarations
-GET /api/v1/border-controls
-GET /api/v1/logistics
-GET /api/v1/alerts
-```
+* GitHub para control de versiones.
+* Trello para planificación y seguimiento de tareas.
+* Postman para pruebas de endpoints.
 
-# Endpoints principales
+---
 
-## Usuarios
+# Características Implementadas
 
-```http
-POST /api/v1/users
-GET /api/v1/users
-PUT /api/v1/users/{id}
-DELETE /api/v1/users/{id}
-```
+* Arquitectura basada en microservicios.
+* API Gateway centralizado.
+* Descubrimiento de servicios mediante Eureka.
+* Comunicación entre servicios utilizando OpenFeign.
+* Persistencia de datos con Oracle Database.
+* Mensajería asíncrona mediante Kafka.
+* Contenerización utilizando Docker.
+* Documentación mediante Swagger/OpenAPI.
+* Logging para monitoreo y trazabilidad de operaciones.
 
-## Identidad
+---
 
-```http
-POST /api/v1/identity-documents
-PATCH /api/v1/identity-documents/{id}/validate
-```
+# Estado del Proyecto
 
-## Visa
-
-```http
-POST /api/v1/visa-requests
-PATCH /api/v1/visa-requests/{id}/approve
-```
-
-## Salud
-
-```http
-POST /api/v1/health-declarations
-PATCH /api/v1/health-declarations/{id}/evaluate
-```
-
-## Control Fronterizo
-
-```http
-POST /api/v1/border-controls
-GET /api/v1/border-controls
-```
-
-# Migraciones y persistencia
-
-Cada microservicio incorpora scripts de migración inicial para la creación de tablas y estructuras de datos.
-
-Durante las pruebas locales se utiliza:
-
-```properties
-spring.jpa.hibernate.ddl-auto=update
-```
-
-Las estructuras incluyen:
-
-* Usuarios
-* Documentos de identidad
-* Solicitudes de visa
-* Declaraciones sanitarias
-* Controles fronterizos
-
-# Control de versiones
-
-El proyecto utiliza GitHub como herramienta de control de versiones.
-
-Los commits fueron organizados por módulos y funcionalidades, documentando:
-
-* Actualización de usuarios e identidad.
-* Actualización de visas y declaraciones sanitarias.
-* Actualización del flujo de control fronterizo.
-* Integración mediante OpenFeign.
-* Configuración Docker y despliegue.
-* Mejoras de seguridad, validaciones y manejo de excepciones.
-
-# Proyecto Académico
-
-Proyecto desarrollado para la asignatura Desarrollo FullStack, aplicando arquitectura distribuida basada en microservicios, persistencia de datos, comunicación entre servicios, seguridad, Docker, Eureka, Gateway, OpenFeign y Kafka.
+Proyecto funcional desarrollado como parte de la asignatura Desarrollo FullStack 1, implementando una arquitectura distribuida basada en microservicios y buenas prácticas de desarrollo de software.

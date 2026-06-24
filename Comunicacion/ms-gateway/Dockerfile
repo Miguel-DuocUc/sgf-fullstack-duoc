@@ -9,4 +9,4 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 RUN chown spring:spring app.jar
 USER spring:spring
-ENTRYPOINT ["java", "-jar", "app.jar"]]
+ENTRYPOINT ["java", "-jar", "app.jar"]
