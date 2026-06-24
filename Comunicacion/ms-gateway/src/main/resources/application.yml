@@ -14,47 +14,65 @@ spring:
         - id: ms-auth-route
           uri: lb://ms-auth
           predicates:
-            - Path=/api/v1/auth/**
+            - name: Path
+              args:
+                pattern: /api/v1/auth/**
 
         - id: ms-logistics-route
           uri: lb://ms-logistics
           predicates:
-            - Path=/api/v1/logistics/**
+            - name: Path
+              args:
+                pattern: /api/v1/logistics/**
 
         - id: ms-users-route
           uri: lb://ms-users
           predicates:
-            - Path=/api/v1/users/**
+            - name: Path
+              args:
+                pattern: /api/v1/users/**
 
         - id: ms-bordercontrol-route
           uri: lb://ms-bordercontrol
           predicates:
-            - Path=/api/v1/border-control/**
+            - name: Path
+              args:
+                pattern: /api/v1/border-control/**
 
         - id: ms-visa-route
           uri: lb://ms-visa
           predicates:
-            - Path=/api/v1/visas/**
+            - name: Path
+              args:
+                pattern: /api/v1/visas/**
 
         - id: ms-identity-route
           uri: lb://ms-identity
           predicates:
-            - Path=/api/v1/identity/**
+            - name: Path
+              args:
+                pattern: /api/v1/identity/**
 
         - id: ms-health-route
           uri: lb://ms-health
           predicates:
-            - Path=/api/v1/health/**
+            - name: Path
+              args:
+                pattern: /api/v1/health/**
 
         - id: ms-alerts-route
           uri: lb://ms-alerts
           predicates:
-            - Path=/api/v1/alerts/**
+            - name: Path
+              args:
+                pattern: /api/v1/alerts/**
 
         - id: ms-audit-route
           uri: lb://ms-audit
           predicates:
-            - Path=/api/v1/audit/**
+            - name: Path
+              args:
+                pattern: /api/v1/audit/**
 
         # ==========================================
         # RUTAS DE SWAGGER (Recolección de JSON)
@@ -62,65 +80,101 @@ spring:
         - id: ms-auth-docs-route
           uri: lb://ms-auth
           predicates:
-            - Path=/docs/ms-auth/**
+            - name: Path
+              args:
+                pattern: /docs/ms-auth/**
           filters:
-            - RewritePath=/docs/ms-auth/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-logistics-docs-route
           uri: lb://ms-logistics
           predicates:
-            - Path=/docs/ms-logistics/**
+            - name: Path
+              args:
+                pattern: /docs/ms-logistics/**
           filters:
-            - RewritePath=/docs/ms-logistics/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-users-docs-route
           uri: lb://ms-users
           predicates:
-            - Path=/docs/ms-users/**
+            - name: Path
+              args:
+                pattern: /docs/ms-users/**
           filters:
-            - RewritePath=/docs/ms-users/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-bordercontrol-docs-route
           uri: lb://ms-bordercontrol
           predicates:
-            - Path=/docs/ms-bordercontrol/**
+            - name: Path
+              args:
+                pattern: /docs/ms-bordercontrol/**
           filters:
-            - RewritePath=/docs/ms-bordercontrol/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-visa-docs-route
           uri: lb://ms-visa
           predicates:
-            - Path=/docs/ms-visa/**
+            - name: Path
+              args:
+                pattern: /docs/ms-visa/**
           filters:
-            - RewritePath=/docs/ms-visa/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-identity-docs-route
           uri: lb://ms-identity
           predicates:
-            - Path=/docs/ms-identity/**
+            - name: Path
+              args:
+                pattern: /docs/ms-identity/**
           filters:
-            - RewritePath=/docs/ms-identity/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-health-docs-route
           uri: lb://ms-health
           predicates:
-            - Path=/docs/ms-health/**
+            - name: Path
+              args:
+                pattern: /docs/ms-health/**
           filters:
-            - RewritePath=/docs/ms-health/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-alerts-docs-route
           uri: lb://ms-alerts
           predicates:
-            - Path=/docs/ms-alerts/**
+            - name: Path
+              args:
+                pattern: /docs/ms-alerts/**
           filters:
-            - RewritePath=/docs/ms-alerts/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
         - id: ms-audit-docs-route
           uri: lb://ms-audit
           predicates:
-            - Path=/docs/ms-audit/**
+            - name: Path
+              args:
+                pattern: /docs/ms-audit/**
           filters:
-            - RewritePath=/docs/ms-audit/(?<segment>.*), /$\{segment}
+            - name: StripPrefix
+              args:
+                parts: 2
 
 eureka:
   client:
@@ -140,12 +194,14 @@ global:
 # CONFIGURACIÓN UI DE SWAGGER (Dropdown Menu)
 # ==========================================
 springdoc:
+  api-docs:
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     urls:
-      - name: Autenticación (ms-auth)
+      - name: Autenticacion (ms-auth)
         url: /docs/ms-auth/v3/api-docs
-      - name: Logística (ms-logistics)
+      - name: Logistica (ms-logistics)
         url: /docs/ms-logistics/v3/api-docs
       - name: Usuarios (ms-users)
         url: /docs/ms-users/v3/api-docs
@@ -159,5 +215,5 @@ springdoc:
         url: /docs/ms-health/v3/api-docs
       - name: Alertas (ms-alerts)
         url: /docs/ms-alerts/v3/api-docs
-      - name: Auditoría (ms-audit)
+      - name: Auditoria (ms-audit)
         url: /docs/ms-audit/v3/api-docs

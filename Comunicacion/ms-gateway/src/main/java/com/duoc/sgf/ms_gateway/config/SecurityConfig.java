@@ -19,23 +19,23 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
-                // Apagamos CSRF porque usamos JWT
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(formLogin -> formLogin.disable())
 
                 .authorizeExchange(exchanges -> exchanges
-                        // 1. Añadimos explícitamente el archivo exacto "/swagger-ui.html"
-                        .pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/docs/**").permitAll()
-
-                        // 2. El endpoint para loguearse es PÚBLICO
+                        .pathMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**",
+                                "/docs/**",
+                                "/actuator/**"
+                        ).permitAll()
                         .pathMatchers("/api/v1/auth/**").permitAll()
-
-                        // 3. TODO LO DEMÁS ESTÁ BLOQUEADO
                         .anyExchange().authenticated()
                 )
-                // 4. Inyectamos tu filtro JWT
-                .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION);
+                .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION);
 
         return http.build();
     }
