@@ -99,15 +99,16 @@ Rutas principales:
 
 # Documentación Swagger
 
-Swagger se encuentra habilitado en los microservicios para la exploración y prueba de endpoints.
+La documentación de la API está centralizada en el API Gateway. Los microservicios no exponen Swagger directamente, ya que están en una red interna de Docker sin puertos expuestos al exterior.
 
 Ejemplo local:
 
 ```text
-http://localhost:8081/swagger-ui.html
-http://localhost:8082/swagger-ui.html
-http://localhost:8083/swagger-ui.html
+http://localhost:9090/swagger-ui.html
 ```
+Desde ahí se puede seleccionar cualquier microservicio mediante el menú desplegable y explorar sus endpoints.
+
+No es posible acceder a http://localhost:8081/swagger-ui.html ni a ningún puerto individual de los microservicios desde fuera de Docker, ya que solo el gateway tiene el puerto 9090 expuesto al host.
 
 ---
 

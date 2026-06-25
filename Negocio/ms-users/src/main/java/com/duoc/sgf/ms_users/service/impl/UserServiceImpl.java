@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.duoc.sgf.ms_users.model.mapper.UserMapper;
+
 
 import java.util.List;
 
@@ -21,54 +23,48 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper mapper;  // ← agregado
 
     @Override
     public List<UserResponseDto> findAll() {
         log.info("Listando todos los usuarios registrados");
-
         return userRepository.findAll()
                 .stream()
-                .map(this::toResponseDto)
+                .map(mapper::toDto)  // ← cambiado
                 .toList();
     }
 
     @Override
     public UserResponseDto findById(Long id) {
         log.info("Buscando usuario por id: {}", id);
-
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Usuario no encontrado con id: {}", id);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
                 });
-
         log.info("Usuario encontrado correctamente con id: {}", id);
-        return toResponseDto(user);
+        return mapper.toDto(user);  // ← cambiado
     }
 
     @Override
     public UserResponseDto findByRut(String rut) {
         log.info("Buscando usuario por RUT: {}", rut);
-
         User user = userRepository.findByRut(rut)
                 .orElseThrow(() -> {
                     log.warn("Usuario no encontrado con RUT: {}", rut);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
                 });
-
         log.info("Usuario encontrado correctamente con RUT: {}", rut);
-        return toResponseDto(user);
+        return mapper.toDto(user);  // ← cambiado
     }
 
     @Override
     public List<UserResponseDto> findByRole(String role) {
         log.info("Buscando usuarios por rol: {}", role);
-
         List<UserResponseDto> users = userRepository.findByRole(role.toUpperCase())
                 .stream()
-                .map(this::toResponseDto)
+                .map(mapper::toDto)  // ← cambiado
                 .toList();
-
         log.info("Cantidad de usuarios encontrados para el rol {}: {}", role, users.size());
         return users;
     }
@@ -87,46 +83,36 @@ public class UserServiceImpl implements UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un usuario con ese correo");
         }
 
-        User user = new User();
-        user.setRut(request.getRut());
-        user.setName(request.getName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
+        User user = mapper.toEntity(request);  // ← cambiado
+        // La contraseña se encripta aquí, no en el mapper
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole().toUpperCase());
+        user.setStatus(request.getStatus() == null || request.getStatus().isBlank()
+                ? "ACTIVO" : request.getStatus().toUpperCase());
 
-        if (request.getStatus() == null || request.getStatus().isBlank()) {
-            user.setStatus("ACTIVO");
-        } else {
-            user.setStatus(request.getStatus().toUpperCase());
-        }
-
-        User savedUser = userRepository.save(user);
-
-        log.info("Usuario creado correctamente con id: {}", savedUser.getId());
-
-        return toResponseDto(savedUser);
+        User saved = userRepository.save(user);
+        log.info("Usuario creado correctamente con id: {}", saved.getId());
+        return mapper.toDto(saved);  // ← cambiado
     }
 
     @Override
     public UserResponseDto update(Long id, UserRequestDto request) {
         log.info("Iniciando actualización de usuario con id: {}", id);
-
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("No se pudo actualizar. Usuario no encontrado con id: {}", id);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
                 });
 
-        userRepository.findByRut(request.getRut()).ifPresent(existingUser -> {
-            if (!existingUser.getId().equals(id)) {
+        userRepository.findByRut(request.getRut()).ifPresent(existing -> {
+            if (!existing.getId().equals(id)) {
                 log.warn("No se pudo actualizar usuario {}. RUT duplicado: {}", id, request.getRut());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe otro usuario con ese RUT");
             }
         });
 
-        userRepository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
-            if (!existingUser.getId().equals(id)) {
+        userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
+            if (!existing.getId().equals(id)) {
                 log.warn("No se pudo actualizar usuario {}. Correo duplicado: {}", id, request.getEmail());
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe otro usuario con ese correo");
             }
@@ -136,46 +122,25 @@ public class UserServiceImpl implements UserService {
         user.setName(request.getName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
+        // La contraseña se encripta aquí, no en el mapper
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole().toUpperCase());
+        user.setStatus(request.getStatus() == null || request.getStatus().isBlank()
+                ? "ACTIVO" : request.getStatus().toUpperCase());
 
-        if (request.getStatus() == null || request.getStatus().isBlank()) {
-            user.setStatus("ACTIVO");
-        } else {
-            user.setStatus(request.getStatus().toUpperCase());
-        }
-
-        User updatedUser = userRepository.save(user);
-
-        log.info("Usuario actualizado correctamente con id: {}", updatedUser.getId());
-
-        return toResponseDto(updatedUser);
+        User updated = userRepository.save(user);
+        log.info("Usuario actualizado correctamente con id: {}", updated.getId());
+        return mapper.toDto(updated);  // ← cambiado
     }
 
     @Override
     public void delete(Long id) {
         log.info("Iniciando eliminación de usuario con id: {}", id);
-
         if (!userRepository.existsById(id)) {
             log.warn("No se pudo eliminar. Usuario no encontrado con id: {}", id);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }
-
         userRepository.deleteById(id);
-
         log.info("Usuario eliminado correctamente con id: {}", id);
-    }
-
-    private UserResponseDto toResponseDto(User user) {
-        return new UserResponseDto(
-                user.getId(),
-                user.getRut(),
-                user.getName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getRole(),
-                user.getStatus(),
-                user.getCreatedAt()
-        );
     }
 }
