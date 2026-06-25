@@ -187,7 +187,7 @@ class BorderControlServiceImplTest {
         when(identityClient.findById(2L)).thenReturn(crearDocumentoValidado());
         when(visaClient.findById(3L)).thenReturn(crearVisaAprobada());
         when(healthClient.findById(4L)).thenReturn(crearDeclaracionApta());
-        when(logisticsClient.obtenerPasoFronterizoPorId(5L)).thenReturn(new Object());
+        when(logisticsClient.obtenerPasoFronterizoPorId(5L)).thenReturn(crearCheckpointValido());
     }
 
     private UserBasicDto crearUsuarioActivo() {
@@ -250,5 +250,16 @@ class BorderControlServiceImplTest {
         health.setObservations("Declaración apta");
         health.setCreatedAt(LocalDateTime.now());
         return health;
+    }
+
+    private LogisticsCheckpointBasicDto crearCheckpointValido() {
+        LogisticsCheckpointBasicDto checkpoint = new LogisticsCheckpointBasicDto();
+        checkpoint.setId(5L);
+        checkpoint.setName("Paso Los Libertadores");
+        checkpoint.setDireccion("Ruta Internacional 60");
+        checkpoint.setEstadoOperativo("OPERATIVO");
+        checkpoint.setCantPersonMax(100);
+        checkpoint.setGuardPerson(10);
+        return checkpoint;
     }
 }

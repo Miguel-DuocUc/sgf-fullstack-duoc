@@ -5,12 +5,7 @@ import com.duoc.sgf.ms_bordercontrol.client.IdentityClient;
 import com.duoc.sgf.ms_bordercontrol.client.LogisticsClient;
 import com.duoc.sgf.ms_bordercontrol.client.UserClient;
 import com.duoc.sgf.ms_bordercontrol.client.VisaClient;
-import com.duoc.sgf.ms_bordercontrol.model.dto.BorderControlRequestDto;
-import com.duoc.sgf.ms_bordercontrol.model.dto.BorderControlResponseDto;
-import com.duoc.sgf.ms_bordercontrol.model.dto.HealthDeclarationBasicDto;
-import com.duoc.sgf.ms_bordercontrol.model.dto.IdentityDocumentBasicDto;
-import com.duoc.sgf.ms_bordercontrol.model.dto.UserBasicDto;
-import com.duoc.sgf.ms_bordercontrol.model.dto.VisaRequestBasicDto;
+import com.duoc.sgf.ms_bordercontrol.model.dto.*;
 import com.duoc.sgf.ms_bordercontrol.event.BorderControlEventProducer;
 import com.duoc.sgf.ms_bordercontrol.model.BorderControl;
 import com.duoc.sgf.ms_bordercontrol.repository.BorderControlRepository;
@@ -251,7 +246,7 @@ public class BorderControlServiceImpl implements BorderControlService {
         try {
             log.info("Consultando paso fronterizo en MS-Logistics con id: {}", checkpointId);
 
-            Object checkpointInfo = logisticsClient.obtenerPasoFronterizoPorId(checkpointId);
+            LogisticsCheckpointBasicDto checkpointInfo = logisticsClient.obtenerPasoFronterizoPorId(checkpointId);
 
             if (checkpointInfo == null) {
                 log.warn("Paso fronterizo no encontrado en MS-Logistics con id: {}", checkpointId);
