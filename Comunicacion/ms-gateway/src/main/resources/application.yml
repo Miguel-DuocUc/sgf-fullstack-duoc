@@ -7,174 +7,116 @@ spring:
 
   cloud:
     gateway:
-      routes:
-        # ==========================================
-        # RUTAS DE NEGOCIO (APIs reales)
-        # ==========================================
-        - id: ms-auth-route
-          uri: lb://ms-auth
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/auth/**
+      server:
+        webflux:
+          routes:
+            - id: ms-auth-route
+              uri: lb://ms-auth
+              predicates:
+                - Path=/api/v1/auth/**
 
-        - id: ms-logistics-route
-          uri: lb://ms-logistics
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/logistics/**
+            - id: ms-logistics-route
+              uri: lb://ms-logistics
+              predicates:
+                - Path=/api/v1/logistics/**
 
-        - id: ms-users-route
-          uri: lb://ms-users
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/users/**
+            - id: ms-users-route
+              uri: lb://ms-users
+              predicates:
+                - Path=/api/v1/users/**
 
-        - id: ms-bordercontrol-route
-          uri: lb://ms-bordercontrol
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/border-control/**
+            - id: ms-bordercontrol-route
+              uri: lb://ms-bordercontrol
+              predicates:
+                - Path=/api/v1/border-control/**
 
-        - id: ms-visa-route
-          uri: lb://ms-visa
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/visas/**
+            - id: ms-visa-route
+              uri: lb://ms-visa
+              predicates:
+                - Path=/api/v1/visas/**
 
-        - id: ms-identity-route
-          uri: lb://ms-identity
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/identity/**
+            - id: ms-identity-route
+              uri: lb://ms-identity
+              predicates:
+                - Path=/api/v1/identity/**
 
-        - id: ms-health-route
-          uri: lb://ms-health
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/health/**
+            - id: ms-health-route
+              uri: lb://ms-health
+              predicates:
+                - Path=/api/v1/health/**
 
-        - id: ms-alerts-route
-          uri: lb://ms-alerts
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/alerts/**
+            - id: ms-alerts-route
+              uri: lb://ms-alerts
+              predicates:
+                - Path=/api/v1/alerts/**
 
-        - id: ms-audit-route
-          uri: lb://ms-audit
-          predicates:
-            - name: Path
-              args:
-                pattern: /api/v1/audit/**
+            - id: ms-audit-route
+              uri: lb://ms-audit
+              predicates:
+                - Path=/api/v1/audit/**
 
-        # ==========================================
-        # RUTAS DE SWAGGER (Recolección de JSON)
-        # ==========================================
-        - id: ms-auth-docs-route
-          uri: lb://ms-auth
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-auth/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-auth-docs-route
+              uri: lb://ms-auth
+              predicates:
+                - Path=/docs/ms-auth/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-logistics-docs-route
-          uri: lb://ms-logistics
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-logistics/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-logistics-docs-route
+              uri: lb://ms-logistics
+              predicates:
+                - Path=/docs/ms-logistics/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-users-docs-route
-          uri: lb://ms-users
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-users/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-users-docs-route
+              uri: lb://ms-users
+              predicates:
+                - Path=/docs/ms-users/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-bordercontrol-docs-route
-          uri: lb://ms-bordercontrol
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-bordercontrol/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-bordercontrol-docs-route
+              uri: lb://ms-bordercontrol
+              predicates:
+                - Path=/docs/ms-bordercontrol/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-visa-docs-route
-          uri: lb://ms-visa
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-visa/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-visa-docs-route
+              uri: lb://ms-visa
+              predicates:
+                - Path=/docs/ms-visa/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-identity-docs-route
-          uri: lb://ms-identity
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-identity/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-identity-docs-route
+              uri: lb://ms-identity
+              predicates:
+                - Path=/docs/ms-identity/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-health-docs-route
-          uri: lb://ms-health
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-health/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-health-docs-route
+              uri: lb://ms-health
+              predicates:
+                - Path=/docs/ms-health/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-alerts-docs-route
-          uri: lb://ms-alerts
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-alerts/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-alerts-docs-route
+              uri: lb://ms-alerts
+              predicates:
+                - Path=/docs/ms-alerts/**
+              filters:
+                - StripPrefix=2
 
-        - id: ms-audit-docs-route
-          uri: lb://ms-audit
-          predicates:
-            - name: Path
-              args:
-                pattern: /docs/ms-audit/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 2
+            - id: ms-audit-docs-route
+              uri: lb://ms-audit
+              predicates:
+                - Path=/docs/ms-audit/**
+              filters:
+                - StripPrefix=2
 
 eureka:
   client:
@@ -217,3 +159,8 @@ springdoc:
         url: /docs/ms-alerts/v3/api-docs
       - name: Auditoria (ms-audit)
         url: /docs/ms-audit/v3/api-docs
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
