@@ -1,14 +1,17 @@
 package com.duoc.sgf.ms_alerts.service;
 
-
-import com.duoc.sgf.ms_alerts.model.Alert;
+import com.duoc.sgf.ms_alerts.model.dto.AlertRequestDto;
+import com.duoc.sgf.ms_alerts.model.dto.AlertResponseDto;
 import java.util.List;
 
 public interface AlertService {
-    Alert crearAlerta(Alert alerta);
-    List<Alert> obtenerAlertasActivas();
-    List<Alert> verificarPasaporte(String pasaporte);
-    Alert desactivarAlerta(Long id);
-    void registrarIntercepcion(Alert alerta, String pasaporte);
 
+    AlertResponseDto crearAlerta(AlertRequestDto request);
+
+    List<AlertResponseDto> obtenerAlertasActivas();
+
+    List<AlertResponseDto> verificarPasaporte(String pasaporte);
+
+    AlertResponseDto desactivarAlerta(Long id);
+    void registrarIntercepcion(Long alertaId, String pasaporte);
 }
