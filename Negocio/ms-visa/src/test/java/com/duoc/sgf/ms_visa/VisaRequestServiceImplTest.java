@@ -7,6 +7,7 @@ import com.duoc.sgf.ms_visa.model.dto.IdentityDocumentBasicDto;
 import com.duoc.sgf.ms_visa.model.dto.UserBasicDto;
 import com.duoc.sgf.ms_visa.model.dto.VisaRequestDto;
 import com.duoc.sgf.ms_visa.model.dto.VisaResponseDto;
+import com.duoc.sgf.ms_visa.model.mapper.VisaRequestMapper;
 import com.duoc.sgf.ms_visa.repository.VisaRequestRepository;
 import com.duoc.sgf.ms_visa.service.impl.VisaRequestServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ class VisaRequestServiceImplTest {
     private VisaRequestRepository repository;
     private UserClient userClient;
     private IdentityClient identityClient;
+    private VisaRequestMapper mapper;
     private VisaRequestServiceImpl service;
 
     @BeforeEach
@@ -32,7 +34,14 @@ class VisaRequestServiceImplTest {
         repository = mock(VisaRequestRepository.class);
         userClient = mock(UserClient.class);
         identityClient = mock(IdentityClient.class);
-        service = new VisaRequestServiceImpl(repository, userClient, identityClient);
+        mapper = mock(VisaRequestMapper.class);
+
+        service = new VisaRequestServiceImpl(
+                repository,
+                mapper,
+                userClient,
+                identityClient
+        );
     }
 
     @Test
@@ -40,22 +49,35 @@ class VisaRequestServiceImplTest {
         VisaRequestDto request = crearRequestValido();
         prepararValidacionesCorrectas();
 
-        VisaRequest saved = crearVisa();
-        when(repository.save(any(VisaRequest.class))).thenReturn(saved);
+        VisaRequest visaToSave = crearVisaSinId();
+        VisaRequest savedVisa = crearVisa();
+        VisaResponseDto responseDto = crearResponseDto();
+
+        when(mapper.toEntity(request)).thenReturn(visaToSave);
+        when(repository.save(any(VisaRequest.class))).thenReturn(savedVisa);
+        when(mapper.toDto(savedVisa)).thenReturn(responseDto);
 
         VisaResponseDto response = service.create(request);
 
         assertNotNull(response);
         assertEquals(1L, response.getId());
         assertEquals(1L, response.getUserId());
+        assertEquals(2L, response.getIdentityDocumentId());
+        assertEquals("TURISMO", response.getVisaType());
         assertEquals("PENDIENTE", response.getStatus());
 
+        verify(mapper, times(1)).toEntity(request);
         verify(repository, times(1)).save(any(VisaRequest.class));
+        verify(mapper, times(1)).toDto(savedVisa);
     }
 
     @Test
     void debeBuscarVisaPorIdCorrectamente() {
-        when(repository.findById(1L)).thenReturn(Optional.of(crearVisa()));
+        VisaRequest visa = crearVisa();
+        VisaResponseDto responseDto = crearResponseDto();
+
+        when(repository.findById(1L)).thenReturn(Optional.of(visa));
+        when(mapper.toDto(visa)).thenReturn(responseDto);
 
         VisaResponseDto response = service.findById(1L);
 
@@ -64,6 +86,7 @@ class VisaRequestServiceImplTest {
         assertEquals("TURISMO", response.getVisaType());
 
         verify(repository, times(1)).findById(1L);
+        verify(mapper, times(1)).toDto(visa);
     }
 
     @Test
@@ -73,6 +96,7 @@ class VisaRequestServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.findById(99L));
 
         verify(repository, times(1)).findById(99L);
+        verify(mapper, never()).toDto(any(VisaRequest.class));
     }
 
     @Test
@@ -80,9 +104,14 @@ class VisaRequestServiceImplTest {
         VisaRequest visa = crearVisa();
         visa.setStatus("PENDIENTE");
 
+        VisaResponseDto responseDto = crearResponseDto();
+        responseDto.setStatus("APROBADA");
+        responseDto.setObservations("Solicitud aprobada correctamente");
+
         when(repository.findById(1L)).thenReturn(Optional.of(visa));
         prepararValidacionesCorrectas();
         when(repository.save(any(VisaRequest.class))).thenReturn(visa);
+        when(mapper.toDto(visa)).thenReturn(responseDto);
 
         VisaResponseDto response = service.approve(1L);
 
@@ -90,14 +119,20 @@ class VisaRequestServiceImplTest {
         assertEquals("APROBADA", response.getStatus());
 
         verify(repository, times(1)).save(any(VisaRequest.class));
+        verify(mapper, times(1)).toDto(visa);
     }
 
     @Test
     void debeRechazarVisaCorrectamente() {
         VisaRequest visa = crearVisa();
 
+        VisaResponseDto responseDto = crearResponseDto();
+        responseDto.setStatus("RECHAZADA");
+        responseDto.setObservations("Solicitud rechazada por revisión administrativa");
+
         when(repository.findById(1L)).thenReturn(Optional.of(visa));
         when(repository.save(any(VisaRequest.class))).thenReturn(visa);
+        when(mapper.toDto(visa)).thenReturn(responseDto);
 
         VisaResponseDto response = service.reject(1L);
 
@@ -105,6 +140,7 @@ class VisaRequestServiceImplTest {
         assertEquals("RECHAZADA", response.getStatus());
 
         verify(repository, times(1)).save(any(VisaRequest.class));
+        verify(mapper, times(1)).toDto(visa);
     }
 
     @Test
@@ -119,6 +155,7 @@ class VisaRequestServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.create(request));
 
         verify(repository, never()).save(any(VisaRequest.class));
+        verify(mapper, never()).toEntity(any(VisaRequestDto.class));
     }
 
     @Test
@@ -132,6 +169,7 @@ class VisaRequestServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.create(request));
 
         verify(repository, never()).save(any(VisaRequest.class));
+        verify(mapper, never()).toEntity(any(VisaRequestDto.class));
     }
 
     @Test
@@ -157,6 +195,20 @@ class VisaRequestServiceImplTest {
         return request;
     }
 
+    private VisaRequest crearVisaSinId() {
+        VisaRequest visa = new VisaRequest();
+        visa.setUserId(1L);
+        visa.setIdentityDocumentId(2L);
+        visa.setVisaType("TURISMO");
+        visa.setDestinationCountry("ARGENTINA");
+        visa.setTravelPurpose("VACACIONES");
+        visa.setStartDate(LocalDate.now().plusDays(1));
+        visa.setEndDate(LocalDate.now().plusDays(10));
+        visa.setStatus("PENDIENTE");
+        visa.setObservations("Solicitud de prueba");
+        return visa;
+    }
+
     private VisaRequest crearVisa() {
         VisaRequest visa = new VisaRequest();
         visa.setId(1L);
@@ -171,6 +223,22 @@ class VisaRequestServiceImplTest {
         visa.setObservations("Solicitud de prueba");
         visa.setCreatedAt(LocalDateTime.now());
         return visa;
+    }
+
+    private VisaResponseDto crearResponseDto() {
+        VisaResponseDto response = new VisaResponseDto();
+        response.setId(1L);
+        response.setUserId(1L);
+        response.setIdentityDocumentId(2L);
+        response.setVisaType("TURISMO");
+        response.setDestinationCountry("ARGENTINA");
+        response.setTravelPurpose("VACACIONES");
+        response.setStartDate(LocalDate.now().plusDays(1));
+        response.setEndDate(LocalDate.now().plusDays(10));
+        response.setStatus("PENDIENTE");
+        response.setObservations("Solicitud de prueba");
+        response.setCreatedAt(LocalDateTime.now());
+        return response;
     }
 
     private void prepararValidacionesCorrectas() {

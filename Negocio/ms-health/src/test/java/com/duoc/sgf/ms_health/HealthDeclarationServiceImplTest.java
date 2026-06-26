@@ -7,6 +7,7 @@ import com.duoc.sgf.ms_health.model.dto.HealthDeclarationRequestDto;
 import com.duoc.sgf.ms_health.model.dto.HealthDeclarationResponseDto;
 import com.duoc.sgf.ms_health.model.dto.IdentityDocumentBasicDto;
 import com.duoc.sgf.ms_health.model.dto.UserBasicDto;
+import com.duoc.sgf.ms_health.model.mapper.HealthDeclarationMapper;
 import com.duoc.sgf.ms_health.repository.HealthDeclarationRepository;
 import com.duoc.sgf.ms_health.service.impl.HealthDeclarationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ class HealthDeclarationServiceImplTest {
     private HealthDeclarationRepository repository;
     private UserClient userClient;
     private IdentityClient identityClient;
+    private HealthDeclarationMapper mapper;
     private HealthDeclarationServiceImpl service;
 
     @BeforeEach
@@ -32,7 +34,14 @@ class HealthDeclarationServiceImplTest {
         repository = mock(HealthDeclarationRepository.class);
         userClient = mock(UserClient.class);
         identityClient = mock(IdentityClient.class);
-        service = new HealthDeclarationServiceImpl(repository, userClient, identityClient);
+        mapper = mock(HealthDeclarationMapper.class);
+
+        service = new HealthDeclarationServiceImpl(
+                repository,
+                mapper,
+                userClient,
+                identityClient
+        );
     }
 
     @Test
@@ -40,8 +49,13 @@ class HealthDeclarationServiceImplTest {
         HealthDeclarationRequestDto request = crearRequestValido();
         prepararValidacionesCorrectas();
 
-        HealthDeclaration saved = crearDeclaracion();
-        when(repository.save(any(HealthDeclaration.class))).thenReturn(saved);
+        HealthDeclaration declarationToSave = crearDeclaracionSinId();
+        HealthDeclaration savedDeclaration = crearDeclaracion();
+        HealthDeclarationResponseDto responseDto = crearResponseDto();
+
+        when(mapper.toEntity(request)).thenReturn(declarationToSave);
+        when(repository.save(any(HealthDeclaration.class))).thenReturn(savedDeclaration);
+        when(mapper.toDto(savedDeclaration)).thenReturn(responseDto);
 
         HealthDeclarationResponseDto response = service.create(request);
 
@@ -51,12 +65,18 @@ class HealthDeclarationServiceImplTest {
         assertEquals("BAJO", response.getRiskLevel());
         assertEquals("PENDIENTE", response.getStatus());
 
+        verify(mapper, times(1)).toEntity(request);
         verify(repository, times(1)).save(any(HealthDeclaration.class));
+        verify(mapper, times(1)).toDto(savedDeclaration);
     }
 
     @Test
     void debeBuscarDeclaracionPorIdCorrectamente() {
-        when(repository.findById(1L)).thenReturn(Optional.of(crearDeclaracion()));
+        HealthDeclaration declaration = crearDeclaracion();
+        HealthDeclarationResponseDto responseDto = crearResponseDto();
+
+        when(repository.findById(1L)).thenReturn(Optional.of(declaration));
+        when(mapper.toDto(declaration)).thenReturn(responseDto);
 
         HealthDeclarationResponseDto response = service.findById(1L);
 
@@ -65,6 +85,7 @@ class HealthDeclarationServiceImplTest {
         assertEquals("PENDIENTE", response.getStatus());
 
         verify(repository, times(1)).findById(1L);
+        verify(mapper, times(1)).toDto(declaration);
     }
 
     @Test
@@ -74,6 +95,7 @@ class HealthDeclarationServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.findById(99L));
 
         verify(repository, times(1)).findById(99L);
+        verify(mapper, never()).toDto(any(HealthDeclaration.class));
     }
 
     @Test
@@ -82,8 +104,14 @@ class HealthDeclarationServiceImplTest {
         declaration.setHasSymptoms(false);
         declaration.setHasRecentContact(false);
 
+        HealthDeclarationResponseDto responseDto = crearResponseDto();
+        responseDto.setStatus("APTO");
+        responseDto.setRiskLevel("BAJO");
+        responseDto.setObservations("Declaración sanitaria aprobada.");
+
         when(repository.findById(1L)).thenReturn(Optional.of(declaration));
         when(repository.save(any(HealthDeclaration.class))).thenReturn(declaration);
+        when(mapper.toDto(declaration)).thenReturn(responseDto);
 
         HealthDeclarationResponseDto response = service.evaluate(1L);
 
@@ -92,6 +120,7 @@ class HealthDeclarationServiceImplTest {
         assertEquals("BAJO", response.getRiskLevel());
 
         verify(repository, times(1)).save(any(HealthDeclaration.class));
+        verify(mapper, times(1)).toDto(declaration);
     }
 
     @Test
@@ -100,8 +129,14 @@ class HealthDeclarationServiceImplTest {
         declaration.setHasSymptoms(true);
         declaration.setHasRecentContact(false);
 
+        HealthDeclarationResponseDto responseDto = crearResponseDto();
+        responseDto.setStatus("NO_APTO");
+        responseDto.setRiskLevel("ALTO");
+        responseDto.setObservations("Declaración rechazada por presencia de síntomas.");
+
         when(repository.findById(1L)).thenReturn(Optional.of(declaration));
         when(repository.save(any(HealthDeclaration.class))).thenReturn(declaration);
+        when(mapper.toDto(declaration)).thenReturn(responseDto);
 
         HealthDeclarationResponseDto response = service.evaluate(1L);
 
@@ -110,6 +145,7 @@ class HealthDeclarationServiceImplTest {
         assertEquals("ALTO", response.getRiskLevel());
 
         verify(repository, times(1)).save(any(HealthDeclaration.class));
+        verify(mapper, times(1)).toDto(declaration);
     }
 
     @Test
@@ -118,8 +154,14 @@ class HealthDeclarationServiceImplTest {
         declaration.setHasSymptoms(false);
         declaration.setHasRecentContact(true);
 
+        HealthDeclarationResponseDto responseDto = crearResponseDto();
+        responseDto.setStatus("EN_REVISION");
+        responseDto.setRiskLevel("MEDIO");
+        responseDto.setObservations("Declaración requiere revisión por contacto reciente.");
+
         when(repository.findById(1L)).thenReturn(Optional.of(declaration));
         when(repository.save(any(HealthDeclaration.class))).thenReturn(declaration);
+        when(mapper.toDto(declaration)).thenReturn(responseDto);
 
         HealthDeclarationResponseDto response = service.evaluate(1L);
 
@@ -128,6 +170,7 @@ class HealthDeclarationServiceImplTest {
         assertEquals("MEDIO", response.getRiskLevel());
 
         verify(repository, times(1)).save(any(HealthDeclaration.class));
+        verify(mapper, times(1)).toDto(declaration);
     }
 
     @Test
@@ -142,6 +185,7 @@ class HealthDeclarationServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.create(request));
 
         verify(repository, never()).save(any(HealthDeclaration.class));
+        verify(mapper, never()).toEntity(any(HealthDeclarationRequestDto.class));
     }
 
     @Test
@@ -166,6 +210,20 @@ class HealthDeclarationServiceImplTest {
         return request;
     }
 
+    private HealthDeclaration crearDeclaracionSinId() {
+        HealthDeclaration declaration = new HealthDeclaration();
+        declaration.setUserId(1L);
+        declaration.setIdentityDocumentId(2L);
+        declaration.setHasSymptoms(false);
+        declaration.setSymptomsDescription("Sin síntomas");
+        declaration.setHasRecentContact(false);
+        declaration.setVaccinationStatus("COMPLETA");
+        declaration.setRiskLevel("BAJO");
+        declaration.setStatus("PENDIENTE");
+        declaration.setObservations("Declaración de prueba");
+        return declaration;
+    }
+
     private HealthDeclaration crearDeclaracion() {
         HealthDeclaration declaration = new HealthDeclaration();
         declaration.setId(1L);
@@ -180,6 +238,22 @@ class HealthDeclarationServiceImplTest {
         declaration.setObservations("Declaración de prueba");
         declaration.setCreatedAt(LocalDateTime.now());
         return declaration;
+    }
+
+    private HealthDeclarationResponseDto crearResponseDto() {
+        HealthDeclarationResponseDto response = new HealthDeclarationResponseDto();
+        response.setId(1L);
+        response.setUserId(1L);
+        response.setIdentityDocumentId(2L);
+        response.setHasSymptoms(false);
+        response.setSymptomsDescription("Sin síntomas");
+        response.setHasRecentContact(false);
+        response.setVaccinationStatus("COMPLETA");
+        response.setRiskLevel("BAJO");
+        response.setStatus("PENDIENTE");
+        response.setObservations("Declaración de prueba");
+        response.setCreatedAt(LocalDateTime.now());
+        return response;
     }
 
     private void prepararValidacionesCorrectas() {

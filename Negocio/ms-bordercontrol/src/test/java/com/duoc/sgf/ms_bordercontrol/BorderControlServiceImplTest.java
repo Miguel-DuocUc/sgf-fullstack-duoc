@@ -8,6 +8,7 @@ import com.duoc.sgf.ms_bordercontrol.client.VisaClient;
 import com.duoc.sgf.ms_bordercontrol.event.BorderControlEventProducer;
 import com.duoc.sgf.ms_bordercontrol.model.BorderControl;
 import com.duoc.sgf.ms_bordercontrol.model.dto.*;
+import com.duoc.sgf.ms_bordercontrol.model.mapper.BorderControlMapper;
 import com.duoc.sgf.ms_bordercontrol.repository.BorderControlRepository;
 import com.duoc.sgf.ms_bordercontrol.service.impl.BorderControlServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.*;
 class BorderControlServiceImplTest {
 
     private BorderControlRepository repository;
+    private BorderControlMapper mapper;
     private UserClient userClient;
     private IdentityClient identityClient;
     private VisaClient visaClient;
@@ -35,6 +37,7 @@ class BorderControlServiceImplTest {
     @BeforeEach
     void setUp() {
         repository = mock(BorderControlRepository.class);
+        mapper = mock(BorderControlMapper.class);
         userClient = mock(UserClient.class);
         identityClient = mock(IdentityClient.class);
         visaClient = mock(VisaClient.class);
@@ -44,6 +47,7 @@ class BorderControlServiceImplTest {
 
         service = new BorderControlServiceImpl(
                 repository,
+                mapper,
                 userClient,
                 identityClient,
                 visaClient,
@@ -58,10 +62,13 @@ class BorderControlServiceImplTest {
         BorderControlRequestDto request = crearRequestValido();
         prepararValidacionesRemotasCorrectas();
 
-        BorderControl saved = crearBorderControl();
-        saved.setStatus("AUTORIZADO");
+        BorderControl controlToSave = crearBorderControlSinId();
+        BorderControl savedControl = crearBorderControl();
+        BorderControlResponseDto responseDto = crearResponseDto();
 
-        when(repository.save(any(BorderControl.class))).thenReturn(saved);
+        when(mapper.toEntity(request)).thenReturn(controlToSave);
+        when(repository.save(any(BorderControl.class))).thenReturn(savedControl);
+        when(mapper.toDto(savedControl)).thenReturn(responseDto);
 
         BorderControlResponseDto response = service.create(request);
 
@@ -70,15 +77,19 @@ class BorderControlServiceImplTest {
         assertEquals(1L, response.getUserId());
         assertEquals("AUTORIZADO", response.getStatus());
 
+        verify(mapper, times(1)).toEntity(request);
         verify(repository, times(1)).save(any(BorderControl.class));
+        verify(mapper, times(1)).toDto(savedControl);
         verify(eventProducer, times(1)).publishBorderControlEvent(any(BorderControl.class));
     }
 
     @Test
     void debeBuscarControlPorIdCorrectamente() {
         BorderControl borderControl = crearBorderControl();
+        BorderControlResponseDto responseDto = crearResponseDto();
 
         when(repository.findById(1L)).thenReturn(Optional.of(borderControl));
+        when(mapper.toDto(borderControl)).thenReturn(responseDto);
 
         BorderControlResponseDto response = service.findById(1L);
 
@@ -87,6 +98,7 @@ class BorderControlServiceImplTest {
         assertEquals("AUTORIZADO", response.getStatus());
 
         verify(repository, times(1)).findById(1L);
+        verify(mapper, times(1)).toDto(borderControl);
     }
 
     @Test
@@ -96,6 +108,7 @@ class BorderControlServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.findById(99L));
 
         verify(repository, times(1)).findById(99L);
+        verify(mapper, never()).toDto(any(BorderControl.class));
     }
 
     @Test
@@ -129,6 +142,7 @@ class BorderControlServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.create(request));
 
         verify(repository, never()).save(any(BorderControl.class));
+        verify(mapper, never()).toEntity(any(BorderControlRequestDto.class));
         verify(eventProducer, never()).publishBorderControlEvent(any(BorderControl.class));
     }
 
@@ -149,6 +163,7 @@ class BorderControlServiceImplTest {
         assertThrows(ResponseStatusException.class, () -> service.create(request));
 
         verify(repository, never()).save(any(BorderControl.class));
+        verify(mapper, never()).toEntity(any(BorderControlRequestDto.class));
         verify(eventProducer, never()).publishBorderControlEvent(any(BorderControl.class));
     }
 
@@ -166,6 +181,20 @@ class BorderControlServiceImplTest {
         return request;
     }
 
+    private BorderControl crearBorderControlSinId() {
+        BorderControl borderControl = new BorderControl();
+        borderControl.setUserId(1L);
+        borderControl.setIdentityDocumentId(2L);
+        borderControl.setVisaRequestId(3L);
+        borderControl.setHealthDeclarationId(4L);
+        borderControl.setLogisticsCheckpointId(5L);
+        borderControl.setOfficerName("Funcionario Test");
+        borderControl.setMovementType("ENTRADA");
+        borderControl.setStatus("AUTORIZADO");
+        borderControl.setObservations("Control autorizado");
+        return borderControl;
+    }
+
     private BorderControl crearBorderControl() {
         BorderControl borderControl = new BorderControl();
         borderControl.setId(1L);
@@ -180,6 +209,22 @@ class BorderControlServiceImplTest {
         borderControl.setObservations("Control autorizado");
         borderControl.setCreatedAt(LocalDateTime.now());
         return borderControl;
+    }
+
+    private BorderControlResponseDto crearResponseDto() {
+        BorderControlResponseDto response = new BorderControlResponseDto();
+        response.setId(1L);
+        response.setUserId(1L);
+        response.setIdentityDocumentId(2L);
+        response.setVisaRequestId(3L);
+        response.setHealthDeclarationId(4L);
+        response.setLogisticsCheckpointId(5L);
+        response.setOfficerName("Funcionario Test");
+        response.setMovementType("ENTRADA");
+        response.setStatus("AUTORIZADO");
+        response.setObservations("Control autorizado");
+        response.setCreatedAt(LocalDateTime.now());
+        return response;
     }
 
     private void prepararValidacionesRemotasCorrectas() {
