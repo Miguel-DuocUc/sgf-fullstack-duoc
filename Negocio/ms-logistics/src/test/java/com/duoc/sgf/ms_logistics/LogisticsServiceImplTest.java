@@ -8,6 +8,7 @@ import com.duoc.sgf.ms_logistics.repository.LogisticsRepository;
 import com.duoc.sgf.ms_logistics.service.impl.LogisticsServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -84,13 +85,13 @@ class LogisticsServiceImplTest {
         verify(repository, times(1)).findById(1L);
     }
 
+    // AQUI ESTÁ EL CAMBIO: Verificamos que lance la excepción
     @Test
-    void debeRetornarNullCuandoPuestoNoExiste() {
+    void debeLanzarExcepcionCuandoPuestoNoExiste() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        PuestoResponseDto response = service.buscarporId(99L);
-
-        assertNull(response);
+        // Usamos assertThrows para verificar que "estalle" correctamente
+        assertThrows(ResponseStatusException.class, () -> service.buscarporId(99L));
 
         verify(repository, times(1)).findById(99L);
     }
@@ -117,39 +118,37 @@ class LogisticsServiceImplTest {
         verify(repository, times(1)).save(puesto);
     }
 
+    // AQUI ESTÁ EL CAMBIO: Verificamos que lance la excepción
     @Test
-    void debeRetornarNullAlActualizarPuestoInexistente() {
+    void debeLanzarExcepcionAlActualizarPuestoInexistente() {
         PuestoRequestDto request = crearRequest();
 
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        PuestoResponseDto response = service.actualizarPuesto(99L, request);
-
-        assertNull(response);
+        assertThrows(ResponseStatusException.class, () -> service.actualizarPuesto(99L, request));
 
         verify(repository, never()).save(any(PuestoFronterizo.class));
     }
 
+    // AQUI ESTÁ EL CAMBIO: Ya no esperamos un boolean, solo ejecutamos
     @Test
     void debeEliminarPuestoCorrectamente() {
         PuestoFronterizo puesto = crearEntidad();
 
         when(repository.findById(1L)).thenReturn(Optional.of(puesto));
 
-        boolean eliminado = service.eliminarPuesto(1L);
-
-        assertTrue(eliminado);
+        // Como el método es void, solo lo llamamos
+        service.eliminarPuesto(1L);
 
         verify(repository, times(1)).delete(puesto);
     }
 
+    // AQUI ESTÁ EL CAMBIO: Verificamos que lance la excepción al no encontrarlo
     @Test
-    void debeRetornarFalseAlEliminarPuestoInexistente() {
+    void debeLanzarExcepcionAlEliminarPuestoInexistente() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        boolean eliminado = service.eliminarPuesto(99L);
-
-        assertFalse(eliminado);
+        assertThrows(ResponseStatusException.class, () -> service.eliminarPuesto(99L));
 
         verify(repository, never()).delete(any(PuestoFronterizo.class));
     }
