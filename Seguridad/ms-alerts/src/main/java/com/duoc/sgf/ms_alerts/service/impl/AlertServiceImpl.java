@@ -33,7 +33,6 @@ public class AlertServiceImpl implements AlertService {
     public AlertResponseDto crearAlerta(AlertRequestDto request) {
         Alert alerta = alertMapper.toEntity(request);
 
-        // Tu lógica de negocio impecable
         alerta.setFechaCreacion(LocalDateTime.now());
         alerta.setActiva(true);
 

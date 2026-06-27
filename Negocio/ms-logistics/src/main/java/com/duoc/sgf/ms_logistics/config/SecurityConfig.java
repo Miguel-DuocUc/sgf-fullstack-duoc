@@ -15,11 +15,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Exponemos el JSON para que el Gateway lo pueda leer sin token
                         .requestMatchers("/v3/api-docs/**").permitAll()
 
-                        // En modelo "Confianza en el Gateway", aceptamos el tráfico interno
-                        // (En el futuro, aquí volveremos a poner .authenticated() para Zero Trust)
                         .anyRequest().permitAll()
                 );
 

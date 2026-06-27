@@ -52,8 +52,6 @@ public class ApiExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Error interno del servidor fronterizo. Contacte al administrador.")
                 .build();
-
-        // Tip: Puedes agregar un log.error("Error no controlado", ex); aquí para verlo en consola
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

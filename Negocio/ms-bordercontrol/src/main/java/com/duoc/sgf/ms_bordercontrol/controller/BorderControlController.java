@@ -64,7 +64,6 @@ public class BorderControlController {
     })
     public ResponseEntity<BorderControlResponseDto> create(@Valid @RequestBody BorderControlRequestDto request) {
         BorderControlResponseDto response = borderControlService.create(request);
-        // Emisión del evento al bus de Kafka para que otros MS (como ms_alerts) reaccionen
         kafkaTemplate.send("border-events", response);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
