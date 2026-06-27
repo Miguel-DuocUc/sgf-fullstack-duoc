@@ -29,4 +29,11 @@ public class Intercepcion {
 
     @Column(name = "fecha_intercepcion", nullable = false)
     private LocalDateTime fechaIntercepcion;
+
+    // --- AGREGA ESTOS DOS CAMPOS ---
+    @Column(name = "lugar", length = 100)
+    private String lugar;
+
+    @Column(name = "observaciones", length = 255)
+    private String observaciones;
 }
